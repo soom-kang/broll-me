@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "fixtureCorrection": "ASCII-only review metadata does not trigger Korean font loading; explicitly requested Hangul to verify the shared asset.",
+  "checks": [
+    {
+      "file": "reports/improvement-review.html",
+      "providerLabels": true,
+      "blockedRunsExcludedFromQuality": true,
+      "errors": []
+    },
+    {
+      "file": "viewer.html",
+      "width": 390,
+      "sharedKoreanFontLoaded": true,
+      "errors": []
+    },
+    {
+      "file": "compare.html",
+      "width": 390,
+      "sharedKoreanFontLoaded": true,
+      "errors": []
+    },
+    {
+      "file": "viewer.html",
+      "width": 1280,
+      "sharedKoreanFontLoaded": true,
+      "errors": []
+    },
+    {
+      "file": "compare.html",
+      "width": 1280,
+      "sharedKoreanFontLoaded": true,
+      "errors": []
+    }
+  ]
+}

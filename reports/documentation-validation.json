@@ -1,0 +1,35 @@
+{
+  "status": "passed",
+  "semantic_scan": {
+    "workspace_text_files": 396,
+    "matches": [],
+    "archives": {
+      "broll-me.skill": {
+        "text_entries_checked": 61,
+        "matches": [],
+        "sha256": "8103c086b583c0f9d1962e666c34edf9b207eb629375a98a550fde0a8ea5f6f2"
+      },
+      "broll-me.zip": {
+        "text_entries_checked": 61,
+        "matches": [],
+        "sha256": "8103c086b583c0f9d1962e666c34edf9b207eb629375a98a550fde0a8ea5f6f2"
+      }
+    },
+    "scope": "project authored documents, reports, generated HTML, source and curated archives; runtime dependency directories excluded; media data URIs ignored"
+  },
+  "engine_and_cli_hashes_unchanged": true,
+  "engine_files_checked": 10,
+  "current_run_manifest_owned_files_unchanged": 70,
+  "relative_links_checked": 91,
+  "code_block_parity": {
+    "README.md": true,
+    "skills/broll-me/reference/workflow.md": true
+  },
+  "failure_checks": {
+    "unapproved_png": "rejected",
+    "unsupported_configuration_exit": 2
+  },
+  "provider_calls_this_update": 0,
+  "git_initial": "not a repository",
+  "git_final": "not a repository"
+}

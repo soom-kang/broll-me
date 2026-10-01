@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "args": [
+        "build",
+        ".verification/improvements/rejected",
+        "--scene",
+        ".verification/improvements/fixtures/card.json",
+        "--palette",
+        "unknown"
+      ],
+      "exit_code": 2,
+      "single_json_stdout": true,
+      "message": "usage: build.py [-h] [--scene SCENE] [--font-mode {shared,embedded}]\n                [--palette PALETTE | --palette-file PALETTE_FILE]\n                out_dir [clips ...]\nbuild.py: error: unknown palette 'unknown'; choose warm-orange, sage-cream, editorial-blue, midnight-cyan, kkumil-pink, onnimm-orange"
+    },
+    {
+      "args": [
+        "build",
+        ".verification/improvements/rejected",
+        "--scene",
+        ".verification/improvements/fixtures/card.json",
+        "--palette",
+        "warm-orange",
+        "--palette-file",
+        "missing.json"
+      ],
+      "exit_code": 2,
+      "single_json_stdout": true,
+      "message": "argument --palette-file: not allowed with argument --palette"
+    },
+    {
+      "args": [
+        "build",
+        ".verification/improvements/rejected"
+      ],
+      "exit_code": 2,
+      "single_json_stdout": true,
+      "message": "Provide either --scene SPEC.json or HTML fragments, exclusively"
+    },
+    {
+      "args": [
+        "inspect",
+        "does-not-exist.mp4",
+        ".verification/improvements/rejected"
+      ],
+      "exit_code": 1,
+      "single_json_stdout": true,
+      "message": "inspect_video: Input file not found: /Users/soom.kang/Desktop/work/2.services/broll-me/does-not-exist.mp4"
+    }
+  ]
+}

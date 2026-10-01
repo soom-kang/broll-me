@@ -1,0 +1,31 @@
+python3 scripts/validate_package.py
+{"status": "passed", "files": 68, "archive": null, "source_digest": "f863a6110661fc1268cb934a4be5c9d342587b5558f83d52f856ae33127c5bcf"}
+python3 -m unittest discover -s tests -p 'test_*.py'
+/Users/soom.kang/.nvm/versions/node/v24.21.0/bin/node --test tests/*.test.js
+✔ palette is frozen and shared with renderer payload (1.457125ms)
+✔ rgba and RGB mixing preserve endpoints and clamp finite inputs (1.005ms)
+✔ color tracks are seek-order independent and use exact resolved hex (1.267666ms)
+✔ rational FPS retains exact NTSC rates (0.84875ms)
+✔ dimensions and scene duration fail before encoding (0.103875ms)
+✔ output container and source overwrite are rejected (2.525833ms)
+✔ failed encoder is a failed run instead of a success status (36.982458ms)
+✔ early encoder exit retains status when writing to a closed pipe (37.185792ms)
+✔ every supplied example has valid inline JavaScript (2.432292ms)
+✔ scene configuration rejects invalid references and times before DOM mutation (1.735292ms)
+✔ legacy example configurations still validate with callbacks and null times (14.18525ms)
+✔ draft and default final retain FPS, frame count, codecs and alpha with fewer captures (6.160083ms)
+✔ scene checker bounds key seeks and flags only visible tagged text (0.978792ms)
+✔ browser checker rejects actual override mismatch and closes the launched browser (4.006167ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 192.411541
+.........................................................
+----------------------------------------------------------------------
+Ran 57 tests in 0.981s
+
+OK

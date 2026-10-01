@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>broll-me · input / output</title>
+<style>
+@font-face{font-family:Geist;src:url(assets/broll-me-fonts/Geist-Variable.woff2)}
+@font-face{font-family:'Noto Sans KR';src:url(assets/broll-me-fonts/NotoSansKR.ttf)}
+*{box-sizing:border-box}body{margin:0;background:#E9E7E2;color:#0B0B0B;font:16px/1.5 Geist,'Noto Sans KR',sans-serif}main{max-width:1240px;margin:auto;padding:32px 24px}h1{margin:0;font-size:28px}p{margin:8px 0 20px;color:#555}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}figure{margin:0;border:1px solid #CFCBC3;background:#fff;border-radius:6px;overflow:hidden}figcaption{padding:12px 16px;font-weight:600}video{display:block;width:100%;aspect-ratio:16/9;background:#111}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:20px 0}button{padding:10px 18px;border:1px solid #0B0B0B;background:#fff;color:#0B0B0B;border-radius:6px;font:inherit;cursor:pointer}button:first-child{background:#FF5C8D}button:focus-visible,input:focus-visible{outline:3px solid #CE3C6A;outline-offset:3px}input[type=range]{flex:1;min-width:160px;accent-color:#CE3C6A}output{font-variant-numeric:tabular-nums;font-size:14px}a{color:#354135}.details{font-size:14px;border-top:1px solid #CFCBC3;padding-top:16px}.status{min-height:24px}@media(max-width:760px){main{padding:20px 16px}.pair{grid-template-columns:1fr}h1{font-size:24px}}
+</style></head><body><main>
+<h1>broll-me · input / output</h1>
+<p>6.607 seconds · card + kkumil-pink · 1920×1080 · 30000/1001 FPS</p>
+<div class="pair">
+<figure><figcaption>Input / 입력</figcaption><video id="input-video" src="pink-demo-input.mp4" muted playsinline preload="metadata" aria-label="Original excerpt, muted"></video></figure>
+<figure><figcaption>Output / 결과</figcaption><video id="output-video" src="pink-demo-output.mp4" playsinline preload="metadata" aria-label="broll-me output with the excerpt audio"></video></figure>
+</div>
+<div class="controls"><button type="button" id="play">Play both</button><button type="button" id="restart">Restart</button><input id="seek" type="range" min="0" max="6.6066" step="0.001" value="0" aria-label="Seek both videos"><output id="time">0.000 / 6.607 s</output></div>
+<p id="status" class="status" role="status">Press Play both. Audio plays from the output only.</p>
+<div class="details">The graphic is illustrative. The excerpt was encoded once for trimming; broll-me copied its audio into the output. Original files were preserved. GIF playback in the README is silent and reduced to 10 FPS.<br><a href="pink-demo-input.mp4">Input MP4</a> · <a href="pink-demo-output.mp4">Output MP4</a> · <a href="viewer.html">All clips</a> · <a href="compare.html">Engine comparison</a> · <a href="TIMING.md">Timing</a></div>
+</main><script>
+'use strict';
+const input=document.getElementById('input-video'),output=document.getElementById('output-video'),play=document.getElementById('play'),seek=document.getElementById('seek'),time=document.getElementById('time'),status=document.getElementById('status');
+input.muted=true;
+function pause(){input.pause();output.pause();play.textContent='Play both';}
+function seekBoth(t){const value=Math.max(0,Math.min(t,Number(seek.max)));input.currentTime=value;output.currentTime=value;seek.value=String(value);}
+async function start(){try{if(output.ended||output.currentTime>=Number(seek.max)-0.01)seekBoth(0);else input.currentTime=output.currentTime;input.muted=true;await Promise.all([input.play(),output.play()]);play.textContent='Pause';status.textContent='Playing together. Output audio only.';}catch(error){pause();status.textContent='Playback failed: '+error.message;}}
+play.addEventListener('click',()=>output.paused?start():pause());
+document.getElementById('restart').addEventListener('click',()=>{pause();seekBoth(0);status.textContent='Reset to the start. Press Play both.';});
+seek.addEventListener('input',()=>seekBoth(Number(seek.value)));
+output.addEventListener('loadedmetadata',()=>{seek.max=String(Math.min(output.duration,6.6066));});
+output.addEventListener('timeupdate',()=>{seek.value=String(output.currentTime);time.textContent=output.currentTime.toFixed(3)+' / '+Number(seek.max).toFixed(3)+' s';});
+output.addEventListener('ended',()=>{input.pause();play.textContent='Replay';status.textContent='Finished. Press Replay to watch again.';});
+for(const video of [input,output])video.addEventListener('error',()=>{pause();status.textContent='Cannot load '+video.getAttribute('src')+'. Keep the MP4 beside this HTML.';});
+function sync(){if(!output.paused&&!input.seeking&&Math.abs(input.currentTime-output.currentTime)>0.05)input.currentTime=output.currentTime;requestAnimationFrame(sync);}requestAnimationFrame(sync);
+</script></body></html>

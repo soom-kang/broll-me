@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "warm-orange",
+  "name": "Warm Orange",
+  "colors": {
+    "canvas": "#E9E7E2",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#F4F2EE",
+    "ink": "#0B0B0B",
+    "muted": "#595651",
+    "border": "#D6D3CE",
+    "accent": "#FF5A1F",
+    "accentDark": "#BF350A",
+    "onAccent": "#0B0B0B",
+    "inverseSurface": "#0B0B0B",
+    "inverseInk": "#FFFFFF",
+    "inverseMuted": "#ABA8A2",
+    "shadow": "#14120E"
+  }
+}

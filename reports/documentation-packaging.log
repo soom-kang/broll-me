@@ -1,0 +1,77 @@
+📦 Packaging skill: /var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-package-zpm2n06z/broll-me
+   Output directory: /var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-package-zpm2n06z
+
+🔍 Validating skill...
+✅ Skill is valid!
+
+  Added: broll-me/LICENSE
+  Added: broll-me/THIRD_PARTY_NOTICES.md
+  Added: broll-me/SKILL.md
+  Added: broll-me/licenses/Lucide-LICENSE.txt
+  Added: broll-me/agents/openai.yaml
+  Added: broll-me/examples/palette-demo.html
+  Added: broll-me/examples/panel-demo.html
+  Added: broll-me/scripts/setup.sh
+  Added: broll-me/scripts/inspect_video.py
+  Added: broll-me/scripts/media.py
+  Added: broll-me/scripts/make_pages.py
+  Added: broll-me/scripts/broll.py
+  Added: broll-me/scripts/words.py
+  Added: broll-me/scripts/composite.py
+  Added: broll-me/templates/compare.html
+  Added: broll-me/templates/viewer.html
+  Added: broll-me/engine/build.py
+  Added: broll-me/engine/runtime.js
+  Added: broll-me/engine/render.js
+  Added: broll-me/engine/check.js
+  Added: broll-me/engine/palette.py
+  Added: broll-me/engine/motion.js
+  Added: broll-me/engine/beats.js
+  Added: broll-me/engine/fonts.py
+  Added: broll-me/engine/scene_templates.py
+  Added: broll-me/engine/base.css
+  Added: broll-me/reference/scenes.md
+  Added: broll-me/reference/workflow.ko.md
+  Added: broll-me/reference/troubleshooting.md
+  Added: broll-me/reference/usage.md
+  Added: broll-me/reference/provenance.md
+  Added: broll-me/reference/workflow.md
+  Added: broll-me/reference/engine-api.md
+  Added: broll-me/reference/palettes.md
+  Added: broll-me/palettes/onnimm-orange.json
+  Added: broll-me/palettes/sage-cream.json
+  Added: broll-me/palettes/midnight-cyan.json
+  Added: broll-me/palettes/kkumil-pink.json
+  Added: broll-me/palettes/schema.json
+  Added: broll-me/palettes/warm-orange.json
+  Added: broll-me/palettes/editorial-blue.json
+  Added: broll-me/reference/assets/broll-me-title.png
+  Added: broll-me/reference/assets/workflow-ko.png
+  Added: broll-me/reference/assets/workflow-en.html
+  Added: broll-me/reference/assets/workflow-ko.html
+  Added: broll-me/reference/assets/workflow-en.png
+  Added: broll-me/engine/fonts/OFL-Geist.txt
+  Added: broll-me/engine/fonts/Geist-Variable.woff2
+  Added: broll-me/engine/fonts/OFL-NotoSansKR.txt
+  Added: broll-me/engine/fonts/GeistMono-Medium.woff2
+  Added: broll-me/engine/fonts/NotoSansKR.ttf
+  Added: broll-me/scripts/runtime/requirements.txt
+  Added: broll-me/scripts/runtime/check_versions.py
+  Added: broll-me/scripts/runtime/versions.json
+  Added: broll-me/scripts/runtime/package-lock.json
+  Added: broll-me/scripts/runtime/package.json
+  Added: broll-me/scripts/runtime/browser_check.js
+  Added: broll-me/examples/scenes/panel.json
+  Added: broll-me/examples/scenes/chart.json
+  Added: broll-me/examples/scenes/card.json
+  Added: broll-me/examples/scenes/terminal.json
+  Added: broll-me/examples/opus-aoe2/05-low-vs-max.html
+  Added: broll-me/examples/opus-aoe2/plan.json
+  Added: broll-me/examples/opus-aoe2/02-pip-builds.html
+  Added: broll-me/examples/opus-aoe2/04-master-prompt.html
+  Added: broll-me/examples/opus-aoe2/03-effort-slider.html
+  Added: broll-me/examples/opus-aoe2/01-opus-drop.html
+  Added: broll-me/examples/opus-aoe2/06-chapter.html
+
+✅ Successfully packaged skill to: /private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-package-zpm2n06z/broll-me.skill
+{"status": "passed", "backend": "skill-creator", "output": "/Users/soom.kang/Desktop/work/2.services/broll-me/dist", "files": 68}

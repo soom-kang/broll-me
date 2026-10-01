@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "sage-cream",
+  "name": "Sage Cream",
+  "colors": {
+    "canvas": "#F4F1E8",
+    "surface": "#FFFDF7",
+    "surfaceAlt": "#E9EDE2",
+    "ink": "#24382C",
+    "muted": "#536554",
+    "border": "#D9DED4",
+    "accent": "#5E7D64",
+    "accentDark": "#3C5A43",
+    "onAccent": "#FFFFFF",
+    "inverseSurface": "#24382C",
+    "inverseInk": "#FFFDF7",
+    "inverseMuted": "#B6C7B9",
+    "shadow": "#132119"
+  }
+}

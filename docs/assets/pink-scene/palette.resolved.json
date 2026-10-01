@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "kkumil-pink",
+  "name": "Kkumil Pink",
+  "colors": {
+    "canvas": "#FFF0E6",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#FFF0E6",
+    "ink": "#333333",
+    "muted": "#666666",
+    "border": "#EBD5D2",
+    "accent": "#FF5C8D",
+    "accentDark": "#CE3C6A",
+    "onAccent": "#222222",
+    "inverseSurface": "#333333",
+    "inverseInk": "#FFFFFF",
+    "inverseMuted": "#C9C0C3",
+    "shadow": "#40252E",
+    "rose": "#FF8FA6",
+    "coral": "#FFCDB5"
+  }
+}

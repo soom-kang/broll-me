@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "template": "chart",
+  "title": "제공된 수치 비교",
+  "subtitle": "아래 값은 템플릿 설명용 예시입니다",
+  "bars": [{"label": "Option A", "value": 12}, {"label": "Option B", "value": 18}]
+}

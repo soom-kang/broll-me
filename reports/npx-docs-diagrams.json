@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "size": [
+    960,
+    1280
+  ],
+  "viewBox": [
+    480,
+    640
+  ],
+  "self_check": "passed",
+  "fontDependency": "approved Google Fonts stylesheet",
+  "results": [
+    {
+      "lang": "en",
+      "fonts": {
+        "geist": true,
+        "korean": false,
+        "serif": true
+      }
+    },
+    {
+      "lang": "ko",
+      "fonts": {
+        "geist": true,
+        "korean": false,
+        "serif": true
+      }
+    }
+  ]
+}

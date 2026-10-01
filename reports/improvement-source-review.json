@@ -1,0 +1,14 @@
+{
+  "skill": "sharpen-review",
+  "scope": [
+    "skills/broll-me/scripts/broll.py",
+    "skills/broll-me/engine/build.py",
+    "skills/broll-me/engine/fonts.py",
+    "skills/broll-me/engine/scene_templates.py",
+    "skills/broll-me/scripts/make_pages.py"
+  ],
+  "reviewer": "delegated bounded read-only source review",
+  "findings": [],
+  "result": "no_supported_defects",
+  "limits": "Actual media execution was performed by the parent; no second render or broad benchmark was run."
+}

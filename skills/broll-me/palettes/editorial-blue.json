@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "editorial-blue",
+  "name": "Editorial Blue",
+  "colors": {
+    "canvas": "#F3F6FA",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#EBF0F8",
+    "ink": "#172B4D",
+    "muted": "#52647D",
+    "border": "#D8E0EC",
+    "accent": "#2F5BEA",
+    "accentDark": "#2144B5",
+    "onAccent": "#FFFFFF",
+    "inverseSurface": "#172B4D",
+    "inverseInk": "#FFFFFF",
+    "inverseMuted": "#B5C2D7",
+    "shadow": "#0A1426"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "playback": {
+    "input": 0.82773,
+    "output": 0.820891,
+    "inputMuted": true,
+    "outputMuted": false,
+    "inputPaused": false,
+    "outputPaused": false
+  },
+  "ended": {
+    "paused": true,
+    "label": "Replay"
+  },
+  "mobile": {
+    "width": 390,
+    "scrollWidth": 390,
+    "columns": "358px"
+  },
+  "diagrams": [
+    {
+      "lang": "en",
+      "nodes": 5,
+      "viewBox": "0 0 480 640",
+      "fonts": {
+        "geist": true,
+        "korean": true
+      },
+      "overflows": []
+    },
+    {
+      "lang": "ko",
+      "nodes": 5,
+      "viewBox": "0 0 480 640",
+      "fonts": {
+        "geist": true,
+        "korean": true
+      },
+      "overflows": []
+    }
+  ],
+  "pageErrors": [],
+  "diagram_probe_stage": "Local font CSS was tested here, then removed to satisfy diagram self-check. See npx-docs-diagrams.json for final exported HTML/PNG evidence."
+}

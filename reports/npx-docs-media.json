@@ -1,0 +1,195 @@
+{
+  "status": "passed",
+  "installation": {
+    "project": "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-docs-5cbmsy4j",
+    "cli_version": "1.7.0",
+    "installed_skill": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-docs-5cbmsy4j/.agents/skills/broll-me",
+    "host_paths": {
+      "codex": "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-docs-5cbmsy4j/.agents/skills/broll-me",
+      "claude-code": "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-docs-5cbmsy4j/.claude/skills/broll-me"
+    },
+    "install_command": [
+      "npx",
+      "--yes",
+      "skills@1.7.0",
+      "add",
+      "/Users/soom.kang/Desktop/work/2.services/broll-me",
+      "--skill",
+      "broll-me",
+      "--agent",
+      "codex",
+      "claude-code",
+      "--yes"
+    ],
+    "install_exit_code": 0
+  },
+  "media": {
+    "pink-demo-input.mp4": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30000/1001",
+      "frames": 198,
+      "duration": "6.606600",
+      "sha256": "48b874ecf362748f332ad0c6d49d2b7801ffb37f0d20b39824a05fbbb698f987"
+    },
+    "pink-demo-output.mp4": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30000/1001",
+      "frames": 198,
+      "duration": "6.606600",
+      "sha256": "a771caa570fe0fd5fb3035682f3ea92489f63cddab75ccfc1e4e20857a926e87"
+    },
+    "pink-demo-card.mp4": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30000/1001",
+      "frames": 125,
+      "duration": "4.170833",
+      "sha256": "8b856d569eaac842eb734d20d0d582e9fd0c91ebab09d838f669d16b08f77c3e"
+    }
+  },
+  "sample": {
+    "source_sha256": "2154b459ecb97231567bec25f73d3c1c75584d7dcb9c9b07bf52de680cbe5a2d",
+    "source_frame_range": [
+      1592,
+      1790
+    ],
+    "end_exclusive": true,
+    "source_start": 53.119733333333336,
+    "source_end": 59.726333333333336,
+    "fps": "30000/1001",
+    "frame_count": 198,
+    "duration": 6.6066,
+    "insert_in": 2.435766666666667,
+    "insert_out": 6.6066,
+    "card_frames": 125,
+    "palette": "kkumil-pink",
+    "template": "card",
+    "excerpt_audio": "AAC encoded once when trimming; output preview must stream-copy this excerpt audio"
+  },
+  "audio": {
+    "packet_count": 311,
+    "packet_contents_and_timestamps_equal": true
+  },
+  "source_unchanged": true,
+  "palette": "kkumil-pink",
+  "draft_and_final_frames": 125,
+  "invalid_palette_exit": 2,
+  "commands": [
+    {
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_streams",
+        "-of",
+        "json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-input.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-input.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_streams",
+        "-of",
+        "json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-output.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-output.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_streams",
+        "-of",
+        "json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-card.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-card.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-select_streams",
+        "a",
+        "-show_packets",
+        "-show_entries",
+        "packet=pts_time,duration_time,data_hash",
+        "-show_data_hash",
+        "sha256",
+        "-of",
+        "json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-input.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-select_streams",
+        "a",
+        "-show_packets",
+        "-show_entries",
+        "packet=pts_time,duration_time,data_hash",
+        "-show_data_hash",
+        "sha256",
+        "-of",
+        "json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/docs/assets/pink-demo-output.mp4"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "historical_host_evaluations": "unchanged",
+  "new_provider_evaluations": "not_run: outside this task",
+  "human_playback_approval": "pending"
+}

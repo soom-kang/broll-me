@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "tool": "built-in image_gen",
+    "prompt": "Use case: ads-marketing. Asset type: wide README title banner, landscape 3:1 feel. Create one polished flat editorial banner for a palette-based motion graphic B-roll skill. Exact and ONLY large text: \"broll-me\", lowercase with hyphen, immaculate readable bold sans typography. Warm-orange art direction: warm neutral paper #E9E7E2, white surfaces #FFFFFF, ink #0B0B0B, orange #FF5A1F. Left side holds the clear title. Right side shows a film-strip sequence of the same abstract motion-graphic card and small chart changing palette from orange to sage to blue to pink, with crisp bars, cursor and timeline accents; communicate palette changes without extra words. Restrained geometric composition, ample breathing room, fine borders, no shadows, no 3D, no gradients, no faces, no photos, no logos, no watermark. Title and primary composition inside generous safe margins. Opaque background. Deliver a single wide raster image.",
+    "output": "skills/broll-me/reference/assets/broll-me-title.png",
+    "dimensions": [
+      2172,
+      724
+    ],
+    "visual_review": "title text broll-me verified; palette film-strip composition inspected"
+  },
+  "diagrams": {
+    "tool": "diagram-design",
+    "type": "flowchart",
+    "size": "fit 480x640",
+    "palette": "warm-orange",
+    "accent_nodes": [
+      2,
+      4
+    ],
+    "outputs": [
+      "reference/assets/workflow-en.html",
+      "reference/assets/workflow-en.png",
+      "reference/assets/workflow-ko.html",
+      "reference/assets/workflow-ko.png"
+    ],
+    "png_dimensions": [
+      960,
+      1280
+    ],
+    "export": "original HTML SVG bounding box, device scale 2, fonts awaited, omit background; prepared Node Playwright reused",
+    "self_check": "passed both HTML files",
+    "note": "Python Playwright was not installed; no dependency was added. Node Playwright was available in the existing runtime."
+  }
+}

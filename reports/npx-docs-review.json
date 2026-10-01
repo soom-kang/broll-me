@@ -1,0 +1,56 @@
+{
+  "status": "reviewed",
+  "scope": [
+    "README.md",
+    "README.ko.md",
+    "skills/broll-me/SKILL.md",
+    "skills/broll-me/reference/workflow.md",
+    "skills/broll-me/reference/workflow.ko.md",
+    "skills/broll-me/reference/usage.md",
+    "docs/pink-demo.md",
+    "docs/pink-demo.ko.md"
+  ],
+  "review_type": "same-context sharpen-review; not an independent cold review",
+  "english": "stop-slop: removed filler; concrete commands, output contracts and publication status",
+  "korean": "humanizer, grammar-checker, style-guide: action-first instructions, consistent terms and polite endings; technical identifiers retained",
+  "adhd": "Five numbered main steps; manual commands moved to advanced sections; comparison and next action shown first",
+  "findings_resolved": [
+    {
+      "issue": "Main installation assumed the source checkout and Python installer",
+      "resolution": "npx source installation and installed SKILL.md path are primary; archive tested with same route"
+    },
+    {
+      "issue": "Historical preview could be mistaken for current skill output",
+      "resolution": "Regenerated from a matching short input through npx-installed skill; recorded source frames and palette"
+    },
+    {
+      "issue": "Skill installation could be mistaken for runtime provisioning",
+      "resolution": "Separated pinned binary prerequisites, local setup and doctor"
+    },
+    {
+      "issue": "FFmpeg lacks subtitle filter; sample caption timing/font geometry failed initial checks",
+      "resolution": "Used existing fragment support, bounded caption seeks to DURATION and fitted actual Noto Sans KR text; final check passed"
+    },
+    {
+      "issue": "Relative CSS fonts violate diagram self-check",
+      "resolution": "Retained approved Google Fonts stylesheet; both self-checks passed"
+    }
+  ],
+  "open_findings": [],
+  "limits": [
+    "Remote repository installation has not been run; URL is planned.",
+    "No new Codex or Claude provider evaluations.",
+    "Human listening and playback approval are pending."
+  ],
+  "checks": {
+    "make_check": {
+      "python": 57,
+      "node": 14,
+      "failed": 0
+    },
+    "internal_links": 128,
+    "distribution": "passed: npx reinstall and literal documented render",
+    "archive_files": 68,
+    "source_digest": "78ebf25127f9f34c9c78a4363a76e1971a8684f59f09bff6bd9d2821b24e5086"
+  }
+}

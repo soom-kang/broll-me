@@ -1,0 +1,20 @@
+<title>Broll Me transparent panel demo</title>
+<style>
+.panel-title{position:absolute;left:-172px;top:35px;font-size:29px;font-weight:650;color:var(--broll-ink);white-space:nowrap}
+.panel-copy{position:absolute;left:-172px;top:85px;font-size:17px;color:var(--broll-muted)}
+.panel-chip{position:absolute;left:-172px;top:132px;padding:8px 18px;border-radius:22px;background:var(--broll-accent);color:var(--broll-on-accent);font-size:18px;font-weight:650}
+</style>
+<div data-slot="shape">
+  <div class="L" id="panel">
+    <div class="panel-title">원본 위에 자연스럽게</div>
+    <div class="panel-copy">배경은 투명 · 정보는 또렷하게</div>
+    <div class="panel-chip">투명 패널</div>
+  </div>
+</div><!--/shape-->
+<script>
+const P=M.palette;
+M.scene({W:640,H:360,T:1,bg:null,center:[320,180],intro:null,
+  SH:{card:{w:400,h:220,r:26,bg:P.surface,cam:1}},start:'card',SEQ:[],
+  layers:[{el:'panel',tin:null,tout:null,anchor:'t'}]
+});
+</script>

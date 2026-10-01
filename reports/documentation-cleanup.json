@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "scope": "obsolete comparison records, source snapshots, task-owned temporary checkouts and evaluation sandboxes",
+  "deleted_snapshot_files": 208,
+  "deleted_report_files": 14,
+  "task_sandbox_paths_checked": 16,
+  "source_bearing_host_logs_removed": 2,
+  "preserved": "current run execution, command, artifact manifests, rendered outputs and grading; required license notices",
+  "limits": "sandbox source paths in historical execution records no longer resolve; retained fixture copies are available under .verification/improvements/fixtures; historical grading has not been rerun"
+}

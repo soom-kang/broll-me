@@ -1,0 +1,60 @@
+{
+  "status": "passed",
+  "archive": "dist/broll-me.skill",
+  "project_only_install": true,
+  "both_discovery_links_share_one_canonical": true,
+  "render_decode": "passed",
+  "commands": [
+    {
+      "status": "completed",
+      "command": "build",
+      "result": {
+        "font_mode": "shared",
+        "outputs": [
+          "/private/tmp/broll-archive-smoke-drcd5o7a/project/out/card.html"
+        ],
+        "palette": "/private/tmp/broll-archive-smoke-drcd5o7a/project/out/palette.resolved.json"
+      }
+    },
+    {
+      "status": "completed",
+      "command": "check",
+      "result": {
+        "status": "passed",
+        "source": "/private/tmp/broll-archive-smoke-drcd5o7a/project/out/card.html",
+        "width": 640,
+        "height": 360,
+        "duration": 1,
+        "alpha": false,
+        "times": [
+          0,
+          0.12,
+          0.18,
+          0.5,
+          1
+        ],
+        "sampled": false,
+        "totalKeyTimes": 5,
+        "overflows": [],
+        "notes": [
+          "Only visible [data-broll-text] elements are checked. This does not replace playback, contrast or human visual review."
+        ]
+      }
+    },
+    {
+      "status": "completed",
+      "command": "render",
+      "result": {
+        "status": "rendered",
+        "output": "/private/tmp/broll-archive-smoke-drcd5o7a/project/out/card.mp4",
+        "frames": 30,
+        "fps": "30000/1001",
+        "width": 640,
+        "height": 360,
+        "alpha": false,
+        "quality": "final"
+      }
+    }
+  ],
+  "temporary_install_removed": true
+}

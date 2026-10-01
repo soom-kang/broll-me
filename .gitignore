@@ -1,0 +1,13 @@
+.runtime/
+.verification/
+skills/broll-me-workspace/
+.venv/
+.dev-venv/
+motion/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+.env
+.env.*

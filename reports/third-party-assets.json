@@ -1,0 +1,19 @@
+{
+  "noto_fonts_commit": "b38c5c93af322c45f633e17ac440ec1e6c94d489",
+  "noto_url": "https://github.com/google/fonts/tree/b38c5c93af322c45f633e17ac440ec1e6c94d489/ofl/notosanskr",
+  "lucide_license_url": "https://github.com/lucide-icons/lucide/blob/main/LICENSE",
+  "assets": {
+    "skills/broll-me/engine/fonts/NotoSansKR.ttf": {
+      "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+      "bytes": 10414588
+    },
+    "skills/broll-me/engine/fonts/OFL-NotoSansKR.txt": {
+      "sha256": "a5cb775427506f70605da52b87cda1f39708c0165a3b5c23a24405916c1f33ec",
+      "bytes": 4389
+    },
+    "skills/broll-me/licenses/Lucide-LICENSE.txt": {
+      "sha256": "fdcc28746ccdcae999f4c38ac860d1e1e18f52d1a5e85033738918fea12fb6a3",
+      "bytes": 3209
+    }
+  }
+}

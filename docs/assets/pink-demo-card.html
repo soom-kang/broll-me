@@ -1,0 +1,17 @@
+<title>지난 시술 기록을 한눈에</title>
+<style>.tpl-content{position:absolute;left:-701.664px;top:0;width:1403.33px;color:var(--broll-ink)}
+.tpl-title{position:absolute;top:85.536px;width:100%;height:116.251px;overflow:hidden;font-size:89.424px;line-height:1.3;font-weight:650;white-space:nowrap}
+.tpl-subtitle{position:absolute;top:219.672px;width:100%;height:71.3604px;overflow:hidden;font-size:50.9717px;line-height:1.4;color:var(--broll-muted);white-space:nowrap}
+.tpl-body{position:absolute;top:311.421px;width:100%;height:380.643px;overflow:hidden;white-space:pre-wrap;font-size:50.9717px;line-height:1.55}.tpl-body{border-top:2px solid var(--broll-accent);padding-top:0.5em;box-sizing:border-box}</style>
+<div data-slot="shape"><div class="L" id="tpl-layer"><div class="tpl-content"><div class="tpl-title" data-broll-text>지난 시술 기록을 한눈에</div><div class="tpl-subtitle" data-broll-text>설명용 그래픽</div><div class="tpl-body" data-broll-text>색소 배합
+시술 사진</div></div></div></div><!--/shape-->
+<script>const P=M.palette;
+M.scene({W:1920,H:1080,T:4.17083,bg:P.canvas,center:[960.0,540.0],intro:null,
+SH:{compact:{w:1385.47,h:637.632,r:51.3216,bg:P.surface,cam:1},open:{w:1574.4,h:777.6,r:51.3216,bg:P.surface,cam:1}},
+start:'compact',spring:[21.5784,0.84],SEQ:[[0.5005,'open']],layers:[{el:'tpl-layer',tin:0.75075,tout:null,anchor:'t',o:{"din":0.050050000000000004,"lin":0.20854166666666668,"lout":0.08341666666666667}}]});</script>
+
+<style>#demo-caption{position:absolute;left:-880px;top:436px;width:1760px;min-height:52px;white-space:pre-wrap;text-align:center;font:500 36px/1.4 "Noto Sans KR",sans-serif;color:var(--broll-inverse-ink);-webkit-text-stroke:3px var(--broll-inverse-surface);paint-order:stroke fill}</style>
+<div data-slot="over"><div id="demo-caption" data-broll-text></div></div><!--/over-->
+<script>const captionCues=[[0.0, 2.894, "지난번 시술에 썼던 색소 배합 그리고 사진까지"], [2.894, 4.171, "바로 보이게 하자"]];const sceneSeek=window.seek;window.seek=t=>{sceneSeek(t);const cue=captionCues.find(c=>t>=c[0]&&t<c[1]);document.getElementById("demo-caption").textContent=cue?cue[2]:"";};window.BROLL_KEY_TIMES=[...window.BROLL_KEY_TIMES,...captionCues.flatMap(c=>[Math.min(c[0],window.DURATION),Math.min(c[1],window.DURATION)])];window.seek(0);</script>
+
+<style>.tpl-content{font-family:"Noto Sans KR",sans-serif}.tpl-title{font-size:80px;line-height:1.4;height:120px}.tpl-subtitle{height:80px}</style>

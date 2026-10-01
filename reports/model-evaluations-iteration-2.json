@@ -1,0 +1,206 @@
+[
+  {
+    "schema_version": 1,
+    "run_id": "32e41946-4304-4501-899a-8df1f6342701",
+    "iteration": 2,
+    "provider": "codex",
+    "configuration": "with_skill",
+    "eval_id": 1,
+    "eval_name": "palette-switch",
+    "exit_code": 0,
+    "status": "blocked",
+    "reason": "Read-only runtime doctor failed; execution environment unavailable",
+    "elapsed_seconds": 85.50296045899995,
+    "sandbox": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-1-fdncosl5",
+    "directory": "/Users/soom.kang/Desktop/work/2.services/broll-me/skills/broll-me-workspace/iteration-2/codex/eval-1-palette-switch/with_skill/run-32e41946-4304-4501-899a-8df1f6342701",
+    "boundary": "end-to-end",
+    "fixtures": {
+      "source-video": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/source.mp4",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-1-fdncosl5/inputs/source.mp4",
+        "sha256": "557040d27774e9b08079b94fe223583f28e7aaf9d0fcb84ced588b1b036b6cc0",
+        "bytes": 447160
+      },
+      "srt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.srt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-1-fdncosl5/inputs/transcript.srt",
+        "sha256": "e6a2123aa6c0b3039d2a4a70d2a05733ae9cdf3cf05a22cb7c3760053e8c3ed8",
+        "bytes": 82
+      },
+      "vtt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.vtt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-1-fdncosl5/inputs/transcript.vtt",
+        "sha256": "7f377f20d47b88d30ec47c3832ca65255432196a98b5c88e1d102761f18fae9b",
+        "bytes": 86
+      }
+    },
+    "command": [
+      "codex",
+      "exec",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--json",
+      "-C",
+      "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-1-fdncosl5",
+      "-"
+    ],
+    "artifact_manifest_sha256": "ffd4ce16a622c03dfdd9dca27f413ebe1f3a218f5b2a7980321a54abf43db801"
+  },
+  {
+    "schema_version": 1,
+    "run_id": "4de5031a-7c03-4879-aba8-b290b15798d9",
+    "iteration": 2,
+    "provider": "codex",
+    "configuration": "with_skill",
+    "eval_id": 3,
+    "eval_name": "onnimm-panel",
+    "exit_code": 0,
+    "status": "blocked",
+    "reason": "Read-only runtime doctor failed; execution environment unavailable",
+    "elapsed_seconds": 69.37731808299941,
+    "sandbox": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-3-ndlpfyst",
+    "directory": "/Users/soom.kang/Desktop/work/2.services/broll-me/skills/broll-me-workspace/iteration-2/codex/eval-3-onnimm-panel/with_skill/run-4de5031a-7c03-4879-aba8-b290b15798d9",
+    "boundary": "end-to-end",
+    "fixtures": {
+      "source-video": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/source.mp4",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-3-ndlpfyst/inputs/source.mp4",
+        "sha256": "557040d27774e9b08079b94fe223583f28e7aaf9d0fcb84ced588b1b036b6cc0",
+        "bytes": 447160
+      },
+      "srt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.srt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-3-ndlpfyst/inputs/transcript.srt",
+        "sha256": "e6a2123aa6c0b3039d2a4a70d2a05733ae9cdf3cf05a22cb7c3760053e8c3ed8",
+        "bytes": 82
+      },
+      "vtt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.vtt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-3-ndlpfyst/inputs/transcript.vtt",
+        "sha256": "7f377f20d47b88d30ec47c3832ca65255432196a98b5c88e1d102761f18fae9b",
+        "bytes": 86
+      }
+    },
+    "command": [
+      "codex",
+      "exec",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--sandbox",
+      "workspace-write",
+      "--json",
+      "-C",
+      "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-codex-3-ndlpfyst",
+      "-"
+    ],
+    "artifact_manifest_sha256": "d4c538f4cb3c4863ceab168e932b45ed17eec72e91e8f9fa6369ecfd0024083e"
+  },
+  {
+    "schema_version": 1,
+    "run_id": "f28ca53d-b28a-4dd1-b9dc-27614a983fcc",
+    "iteration": 2,
+    "provider": "claude",
+    "configuration": "with_skill",
+    "eval_id": 1,
+    "eval_name": "palette-switch",
+    "exit_code": 0,
+    "status": "completed",
+    "reason": null,
+    "elapsed_seconds": 131.87860454100155,
+    "sandbox": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-1-vfoh8cc1",
+    "directory": "/Users/soom.kang/Desktop/work/2.services/broll-me/skills/broll-me-workspace/iteration-2/claude/eval-1-palette-switch/with_skill/run-f28ca53d-b28a-4dd1-b9dc-27614a983fcc",
+    "boundary": "end-to-end",
+    "fixtures": {
+      "source-video": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/source.mp4",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-1-vfoh8cc1/inputs/source.mp4",
+        "sha256": "557040d27774e9b08079b94fe223583f28e7aaf9d0fcb84ced588b1b036b6cc0",
+        "bytes": 447160
+      },
+      "srt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.srt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-1-vfoh8cc1/inputs/transcript.srt",
+        "sha256": "e6a2123aa6c0b3039d2a4a70d2a05733ae9cdf3cf05a22cb7c3760053e8c3ed8",
+        "bytes": 82
+      },
+      "vtt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.vtt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-1-vfoh8cc1/inputs/transcript.vtt",
+        "sha256": "7f377f20d47b88d30ec47c3832ca65255432196a98b5c88e1d102761f18fae9b",
+        "bytes": 86
+      }
+    },
+    "command": [
+      "claude",
+      "-p",
+      "--output-format",
+      "json",
+      "--tools",
+      "Read,Write,Edit,Bash",
+      "--allowedTools",
+      "Read,Write,Edit,Bash",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--setting-sources",
+      ""
+    ],
+    "artifact_manifest_sha256": "87b56f9aadca5495819e2f5e3761dd330e2244f73996934da3b6fac509db9246"
+  },
+  {
+    "schema_version": 1,
+    "run_id": "67f9c1b8-559b-480e-8f2c-fb4f4a97851e",
+    "iteration": 2,
+    "provider": "claude",
+    "configuration": "with_skill",
+    "eval_id": 3,
+    "eval_name": "onnimm-panel",
+    "exit_code": 0,
+    "status": "completed",
+    "reason": null,
+    "elapsed_seconds": 57.06847308399847,
+    "sandbox": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-3-cq3iwzc0",
+    "directory": "/Users/soom.kang/Desktop/work/2.services/broll-me/skills/broll-me-workspace/iteration-2/claude/eval-3-onnimm-panel/with_skill/run-67f9c1b8-559b-480e-8f2c-fb4f4a97851e",
+    "boundary": "end-to-end",
+    "fixtures": {
+      "source-video": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/source.mp4",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-3-cq3iwzc0/inputs/source.mp4",
+        "sha256": "557040d27774e9b08079b94fe223583f28e7aaf9d0fcb84ced588b1b036b6cc0",
+        "bytes": 447160
+      },
+      "srt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.srt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-3-cq3iwzc0/inputs/transcript.srt",
+        "sha256": "e6a2123aa6c0b3039d2a4a70d2a05733ae9cdf3cf05a22cb7c3760053e8c3ed8",
+        "bytes": 82
+      },
+      "vtt": {
+        "original_path": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/fixtures/transcript.vtt",
+        "sandbox_path": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-eval-claude-3-cq3iwzc0/inputs/transcript.vtt",
+        "sha256": "7f377f20d47b88d30ec47c3832ca65255432196a98b5c88e1d102761f18fae9b",
+        "bytes": 86
+      }
+    },
+    "command": [
+      "claude",
+      "-p",
+      "--output-format",
+      "json",
+      "--tools",
+      "Read,Write,Edit,Bash",
+      "--allowedTools",
+      "Read,Write,Edit,Bash",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--no-session-persistence",
+      "--setting-sources",
+      ""
+    ],
+    "artifact_manifest_sha256": "c089027cfd4b3a540daf2e1e1b6d248007fc338e1accf55751b29a0e89918611"
+  }
+]

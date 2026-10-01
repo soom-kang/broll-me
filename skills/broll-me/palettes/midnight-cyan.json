@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "midnight-cyan",
+  "name": "Midnight Cyan",
+  "colors": {
+    "canvas": "#111827",
+    "surface": "#1F2937",
+    "surfaceAlt": "#273449",
+    "ink": "#F9FAFB",
+    "muted": "#C2CBD5",
+    "border": "#41516A",
+    "accent": "#67E8F9",
+    "accentDark": "#22B8CD",
+    "onAccent": "#111827",
+    "inverseSurface": "#F9FAFB",
+    "inverseInk": "#111827",
+    "inverseMuted": "#526074",
+    "shadow": "#000000"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "template": "card",
+  "title": "지난 시술 기록을 한눈에",
+  "subtitle": "설명용 그래픽",
+  "body": "색소 배합\n시술 사진",
+  "width": 1920,
+  "height": 1080,
+  "duration": 4.170833333333333
+}

@@ -1,0 +1,17 @@
+{
+  "mode": "comprehension",
+  "isolation": "context-free subagent; no author conversation or verdict supplied",
+  "review_count": 1,
+  "targets": ["README.md", "README.ko.md", "skills/broll-me/reference/workflow.md", "skills/broll-me/reference/workflow.ko.md"],
+  "coverage": "All four documents read completely; no neighboring implementation or documentation opened",
+  "reviewer_verdict": "gaps_present",
+  "findings": [{
+    "priority": "P2",
+    "location": "README.md:26; README.ko.md:26; workflow.md:26; workflow.ko.md:26",
+    "finding": "Exact system binaries are required, but their acquisition path or an explicit preprovisioned-environment starting condition was absent.",
+    "resolution": "Both languages now state that the guide starts with provisioned exact binaries. Missing binaries require matching paths/runtime from the project maintainer. Workflow adds literal binary-version and FFmpeg-encoder checks before setup.",
+    "resolution_validation": "author check only; no second cold reviewer run"
+  }],
+  "comprehension": "Readers with prepared binaries can install, build their first clip and locate failure actions. Commands, expected results, exit signals and source/audio limits are present.",
+  "limits": "One comprehension review does not validate implementation, binary availability, visual quality or final human approval. The verdict describes the draft read before the documented correction."
+}

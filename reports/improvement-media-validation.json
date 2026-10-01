@@ -1,0 +1,148 @@
+{
+  "scope": "root local fixture verification; provider execution is separate",
+  "prior_cli_passes": [
+    "doctor",
+    "inspect",
+    "words SRT/VTT",
+    "six built scene checks",
+    "shared font directory move check",
+    "beats",
+    "four final/draft renders"
+  ],
+  "commands": [
+    {
+      "args": [
+        "preview",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/plan.json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/preview.mp4"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "completed",
+        "command": "preview",
+        "result": {
+          "font_mode": "shared",
+          "outputs": [
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/preview.mp4",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/viewer.html",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/compare.html",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/TIMING.md"
+          ]
+        }
+      }
+    },
+    {
+      "args": [
+        "preview",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/plan.json",
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/preview.mp4"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "completed",
+        "command": "preview",
+        "result": {
+          "font_mode": "shared",
+          "outputs": [
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/preview.mp4",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/viewer.html",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/compare.html",
+            "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/TIMING.md"
+          ]
+        }
+      }
+    }
+  ],
+  "initial_smoke_failure": "Fixture plan lacked required clip title; fixture corrected without engine changes.",
+  "source_unchanged": true,
+  "source_audio_hash": "5979038d0954eaf48d2db06f3bc441f081d94d366821adb6423c79c68fc0c05d",
+  "media": [
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/final.mp4",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "30",
+      "duration": "1.001000",
+      "pix_fmt": "yuv420p",
+      "decode": "passed"
+    },
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/draft.mp4",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "30",
+      "duration": "1.001000",
+      "pix_fmt": "yuv420p",
+      "decode": "passed"
+    },
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/final.mov",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "30",
+      "duration": "1.001000",
+      "pix_fmt": "yuva444p12le",
+      "decode": "passed"
+    },
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/draft.mov",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "30",
+      "duration": "1.001000",
+      "pix_fmt": "yuva444p12le",
+      "decode": "passed"
+    },
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/pink/preview.mp4",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "120",
+      "duration": "4.004000",
+      "pix_fmt": "yuv420p",
+      "decode": "passed",
+      "audio_preserved": true
+    },
+    {
+      "file": "/Users/soom.kang/Desktop/work/2.services/broll-me/.verification/improvements/panel/preview.mp4",
+      "width": 640,
+      "height": 360,
+      "fps": "30000/1001",
+      "frames": "120",
+      "duration": "4.004000",
+      "pix_fmt": "yuv420p",
+      "decode": "passed",
+      "audio_preserved": true
+    }
+  ],
+  "alpha": {
+    "final": {
+      "min": 0,
+      "max": 255
+    },
+    "draft": {
+      "min": 0,
+      "max": 255
+    }
+  },
+  "html_bytes": {
+    "shared": 19007,
+    "embedded": 14066612
+  },
+  "status": "passed",
+  "palette_switch": {
+    "presets": [
+      "warm-orange",
+      "midnight-cyan"
+    ],
+    "both_css_and_js": "passed",
+    "same_scene_geometry_timing": true,
+    "different_pixels": true,
+    "seek_deterministic": true
+  }
+}

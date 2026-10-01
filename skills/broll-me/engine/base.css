@@ -1,0 +1,19 @@
+__BROLL_FONT_CSS__
+html,body{margin:0;background:var(--broll-canvas);overflow:hidden}
+html.alpha,html.alpha body{background:transparent}
+body.preview{height:100vh;background:var(--broll-inverse-surface)}
+html:not(.alpha) body.preview{background:var(--broll-canvas)}
+#wrap{position:relative;transform-origin:50% 50%}
+body.preview #wrap{position:fixed;left:50%;top:calc(50% - 10px)}
+#stage{position:relative;overflow:hidden;font-family:'Geist','Noto Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--broll-ink);font-feature-settings:"tnum" 1}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+#shape{position:absolute;overflow:hidden;isolation:isolate;box-shadow:0 1px 2px color-mix(in srgb,var(--broll-shadow) 6%,transparent),0 10px 30px -8px color-mix(in srgb,var(--broll-shadow) 16%,transparent)}
+html.alpha #shape{box-shadow:none}
+.L{position:absolute;width:0;height:0;transform-origin:0 0}
+.a{position:absolute}
+.row{position:absolute;display:flex;align-items:center;white-space:nowrap}
+.blend{mix-blend-mode:normal}
+.mono{font-family:'Geist Mono','Noto Sans KR',ui-monospace,monospace}
+.selected-label{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:var(--broll-inverse-ink)}
+svg{display:block;overflow:visible}
+#cursor{position:absolute;left:0;top:0;height:auto;transform-origin:3px 3px;filter:drop-shadow(0 2px 3px color-mix(in srgb,var(--broll-shadow) 25%,transparent));z-index:10}

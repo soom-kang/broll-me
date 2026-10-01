@@ -1,0 +1,63 @@
+{
+  "archive_sha256": "8103c086b583c0f9d1962e666c34edf9b207eb629375a98a550fde0a8ea5f6f2",
+  "scope": "new documentation package reinstall and one minimum render; no provider calls",
+  "checks": [
+    {
+      "status": "completed",
+      "command": "build",
+      "result": {
+        "font_mode": "shared",
+        "outputs": [
+          "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-document-archive-9u2mnouq/project/built/scene.html"
+        ],
+        "palette": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-document-archive-9u2mnouq/project/built/palette.resolved.json"
+      }
+    },
+    {
+      "status": "completed",
+      "command": "check",
+      "result": {
+        "status": "passed",
+        "source": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-document-archive-9u2mnouq/project/built/scene.html",
+        "width": 640,
+        "height": 360,
+        "duration": 1,
+        "alpha": false,
+        "times": [
+          0,
+          0.12,
+          0.18,
+          0.5,
+          1
+        ],
+        "sampled": false,
+        "totalKeyTimes": 5,
+        "overflows": [],
+        "notes": [
+          "Only visible [data-broll-text] elements are checked. This does not replace playback, contrast or human visual review."
+        ]
+      }
+    },
+    {
+      "status": "completed",
+      "command": "render",
+      "result": {
+        "status": "rendered",
+        "output": "/private/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-document-archive-9u2mnouq/project/clip.mp4",
+        "frames": 30,
+        "fps": "30/1",
+        "width": 640,
+        "height": 360,
+        "alpha": false,
+        "quality": "final"
+      }
+    }
+  ],
+  "status": "passed",
+  "discovery": "two project links, one canonical folder",
+  "documentation_images": 3,
+  "render_decode": "passed",
+  "duration": "1.000000",
+  "frames": "30",
+  "temporary_install_removed": true
+}

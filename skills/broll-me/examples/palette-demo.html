@@ -1,0 +1,23 @@
+<title>Broll Me palette demo</title>
+<style>
+.demo-title{position:absolute;left:-224px;top:42px;font-size:31px;font-weight:650;white-space:nowrap}
+.demo-copy{position:absolute;left:-224px;top:96px;font-size:17px;color:var(--broll-muted)}
+.demo-badge{position:absolute;left:-224px;top:148px;padding:9px 18px;border-radius:24px;background:var(--broll-accent);color:var(--broll-on-accent);font-size:19px;font-weight:650}
+.demo-dot{position:absolute;left:162px;top:48px;width:64px;height:64px;border-radius:20px;background:var(--broll-accent)}
+</style>
+<div data-slot="shape">
+  <div class="L" id="demo" style="color:var(--broll-ink)">
+    <div class="demo-title">색감에 맞는 B-roll</div>
+    <div class="demo-copy">같은 장면 · 선택한 팔레트</div>
+    <div class="demo-badge">팔레트 적용</div>
+    <div class="demo-dot" id="demoDot"></div>
+  </div>
+</div><!--/shape-->
+<script>
+const P=M.palette;
+M.scene({W:640,H:360,T:1,bg:P.canvas,intro:null,
+  SH:{card:{w:512,h:232,r:26,bg:P.surface,cam:1}},start:'card',SEQ:[],
+  layers:[{el:'demo',tin:null,tout:null,anchor:'t'}],
+  extra:(t)=>{document.getElementById('demoDot').style.transform=`rotate(${M.S(t,12,0.9)*8}deg)`;}
+});
+</script>

@@ -1,0 +1,89 @@
+{
+  "status": "passed",
+  "files": 68,
+  "cli_version": "1.7.0",
+  "archives": {
+    "broll-me.skill": "e6dd38f798c1fca042db3b2ea797e5c264198e27d2bd86457f0d1bcfea4ce1d0",
+    "broll-me.zip": "e6dd38f798c1fca042db3b2ea797e5c264198e27d2bd86457f0d1bcfea4ce1d0"
+  },
+  "installed_files_match_archive_manifest": true,
+  "both_hosts_share_one_skill": true,
+  "documented_render": {
+    "width": 640,
+    "height": 360,
+    "frames": 30,
+    "fps": "30/1",
+    "duration": "1.000000",
+    "qualities": [
+      "draft",
+      "final"
+    ]
+  },
+  "demo_media_excluded": true,
+  "temporary_project_removed": true,
+  "commands": [
+    {
+      "label": "install",
+      "command": [
+        "npx",
+        "--yes",
+        "skills@1.7.0",
+        "add",
+        "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-archive-my7xv53w/source",
+        "--skill",
+        "broll-me",
+        "--agent",
+        "codex",
+        "claude-code",
+        "--yes"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "doctor",
+      "command": [
+        "/Users/soom.kang/Desktop/work/2.services/broll-me/.runtime/motion/.venv/bin/python",
+        "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-archive-my7xv53w/project/.agents/skills/broll-me/scripts/broll.py",
+        "doctor"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "documented-render",
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p motion\ncat > motion/scene.json <<'JSON'\n{\n  \"schema_version\": 1,\n  \"template\": \"card\",\n  \"title\": \"Choose a palette\",\n  \"body\": \"Keep the motion. Change the colors.\",\n  \"width\": 640,\n  \"height\": 360,\n  \"duration\": 1\n}\nJSON\npython3 \"$BROLL_SKILL_DIR/scripts/broll.py\" build motion/built \\\n  --scene motion/scene.json --palette kkumil-pink\npython3 \"$BROLL_SKILL_DIR/scripts/broll.py\" check motion/built/scene.html\npython3 \"$BROLL_SKILL_DIR/scripts/broll.py\" render \\\n  motion/built/scene.html motion/out/scene-draft.mp4 --quality draft\npython3 \"$BROLL_SKILL_DIR/scripts/broll.py\" render \\\n  motion/built/scene.html motion/out/scene.mp4 --quality final\n"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "decode",
+      "command": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-archive-my7xv53w/project/motion/out/scene.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "probe",
+      "command": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_streams",
+        "-of",
+        "json",
+        "/var/folders/60/xzk3ppl161dfyx404rzzvp4r0000gn/T/broll-npx-archive-my7xv53w/project/motion/out/scene.mp4"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "remote_installation": "not_run: planned repository not published by this task"
+}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>broll-me 사용 순서</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Geist:wght@400;600&amp;family=Geist+Mono:wght@400;500&amp;family=Noto+Sans+KR:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+:root { --paper:#E9E7E2; --surface:#FFFFFF; --ink:#0B0B0B; --muted:#5D5D5D; --rule:#CFCBC3; --accent:#FF5A1F; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'Geist','Noto Sans KR',sans-serif; }
+main { width:480px; max-width:100%; min-width:0; margin:0 auto; }
+.diagram-container { width:100%; overflow-x:auto; }
+svg { width:480px; min-width:480px; display:block; }
+svg text { fill:var(--ink); }
+.heading { font:400 28px 'Instrument Serif','Noto Sans KR',serif; }
+.name { font:600 18px 'Geist','Noto Sans KR',sans-serif; }
+.sub { font:400 12px 'Geist','Noto Sans KR',sans-serif; fill:var(--muted); }
+.number { font:500 14px 'Geist Mono',monospace; fill:var(--muted); }
+.footer { font:400 12px 'Geist','Noto Sans KR',sans-serif; fill:var(--muted); }
+@media print { .diagram-container { overflow-x:visible; } svg { width:100%; min-width:0; } }
+</style>
+</head>
+<body><main><div class="diagram-container">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 640" role="img" aria-labelledby="workflow-ko-title workflow-ko-desc">
+<title id="workflow-ko-title">broll-me 사용 순서</title>
+<desc id="workflow-ko-desc">Skill 설치, 입력 지정, 프롬프트 실행, draft 검토, 최종 파일 전달 순서입니다.</desc>
+<defs><marker id="workflow-ko-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M 1 1 L 6 4 L 1 7" fill="none" stroke="var(--muted)" stroke-width="1.2"/></marker></defs>
+<rect width="480" height="640" fill="var(--paper)"/>
+<text x="40" y="64" class="heading">broll-me 사용 순서</text>
+<line x1="240" y1="172" x2="240" y2="188" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#workflow-ko-arrow)"/><line x1="240" y1="260" x2="240" y2="276" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#workflow-ko-arrow)"/><line x1="240" y1="348" x2="240" y2="364" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#workflow-ko-arrow)"/><line x1="240" y1="436" x2="240" y2="452" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#workflow-ko-arrow)"/>
+<g class="step" data-step="1">
+<rect x="64" y="108" width="352" height="64" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+<text x="84" y="136" class="number">01</text>
+<text x="124" y="136" class="name">Skill 설치하기</text>
+<text x="124" y="156" class="sub">npx skills add · Codex + Claude Code</text>
+</g><g class="step" data-step="2">
+<rect x="64" y="196" width="352" height="64" rx="6" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/>
+<text x="84" y="224" class="number">02</text>
+<text x="124" y="224" class="name">입력 지정하기</text>
+<text x="124" y="244" class="sub">영상과 자막 · 팔레트</text>
+</g><g class="step" data-step="3">
+<rect x="64" y="284" width="352" height="64" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+<text x="84" y="312" class="number">03</text>
+<text x="124" y="312" class="name">프롬프트 실행하기</text>
+<text x="124" y="332" class="sub">$broll-me / /broll-me</text>
+</g><g class="step" data-step="4">
+<rect x="64" y="372" width="352" height="64" rx="6" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/>
+<text x="84" y="400" class="number">04</text>
+<text x="124" y="400" class="name">Draft 검토하기</text>
+<text x="124" y="420" class="sub">문구 · timing · 전환</text>
+</g><g class="step" data-step="5">
+<rect x="64" y="460" width="352" height="64" rx="6" fill="var(--surface)" stroke="var(--rule)" stroke-width="1"/>
+<text x="84" y="488" class="number">05</text>
+<text x="124" y="488" class="name">최종 파일 받기</text>
+<text x="124" y="508" class="sub">Clip · preview · HTML 검토</text>
+</g>
+<line x1="40" y1="568" x2="440" y2="568" stroke="var(--rule)"/>
+<text x="40" y="600" class="footer">5단계 · Codex와 Claude Code의 공통 CLI</text>
+</svg>
+</div></main></body></html>

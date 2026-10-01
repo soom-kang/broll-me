@@ -1,0 +1,38 @@
+{
+  "en": {
+    "fonts": {
+      "geist": true,
+      "korean": true
+    },
+    "failedRequests": 0,
+    "svg": {
+      "x": 0,
+      "y": 0,
+      "width": 480,
+      "height": 640
+    },
+    "steps": 5,
+    "mobile": {
+      "pageOverflow": false,
+      "localScroll": true
+    }
+  },
+  "ko": {
+    "fonts": {
+      "geist": true,
+      "korean": true
+    },
+    "failedRequests": 0,
+    "svg": {
+      "x": 0,
+      "y": 0,
+      "width": 480,
+      "height": 640
+    },
+    "steps": 5,
+    "mobile": {
+      "pageOverflow": false,
+      "localScroll": true
+    }
+  }
+}

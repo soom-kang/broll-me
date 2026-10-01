@@ -1,0 +1,4 @@
+interface:
+  display_name: "broll-me"
+  short_description: "Branded B-roll templates and transparent video panels"
+  default_prompt: "Use $broll-me to create a palette-driven B-roll insert with the common CLI and scene templates. Follow my approved plan and preserve the source video and audio."

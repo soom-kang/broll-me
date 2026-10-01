@@ -1,0 +1,20 @@
+{
+  "title": "broll-me · pink card demo",
+  "video": "pink-demo-input.mp4",
+  "fps": "30000/1001",
+  "clips": [
+    {
+      "id": "01",
+      "title": "지난 시술 기록을 한눈에",
+      "line": "지난번 시술에 썼던 색소 배합 그리고 사진까지 바로 보이게 하자",
+      "file": "pink-demo-card.mp4",
+      "kind": "full",
+      "in": 2.435766666666667,
+      "out": 6.6066
+    }
+  ],
+  "notes": [
+    "설명용 그래픽입니다. 실제 제품 화면이나 고객 데이터가 아닙니다.",
+    "원본 파일은 변경하지 않았습니다. 샘플 excerpt의 영상과 AAC 오디오는 잘라내기 위해 한 번 인코딩했고, preview는 excerpt 오디오를 복사합니다."
+  ]
+}

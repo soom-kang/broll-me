@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "links_checked": 128,
+  "errors": [],
+  "prose_source_reference_scan": "binary/base64 payloads excluded",
+  "bilingual_commands": "identical bash and JSON blocks"
+}

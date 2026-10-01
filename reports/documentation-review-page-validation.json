@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "file": "viewer.html",
+      "width": 390,
+      "errors": [],
+      "layout": {
+        "overflow": false,
+        "koreanFontReady": true
+      }
+    },
+    {
+      "file": "compare.html",
+      "width": 390,
+      "errors": [],
+      "layout": {
+        "overflow": false,
+        "koreanFontReady": true
+      }
+    },
+    {
+      "file": "viewer.html",
+      "width": 1280,
+      "errors": [],
+      "layout": {
+        "overflow": false,
+        "koreanFontReady": true
+      }
+    },
+    {
+      "file": "compare.html",
+      "width": 1280,
+      "errors": [],
+      "layout": {
+        "overflow": false,
+        "koreanFontReady": true
+      }
+    },
+    {
+      "file": "reports/improvement-review.html",
+      "errors": []
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "skill_name": "broll-me",
+  "evals": [
+    {
+      "id": 1,
+      "name": "palette-switch",
+      "prompt": "같은 B-roll 장면의 모션과 타이밍을 유지하며 warm-orange와 midnight-cyan 두 팔레트로 생성해주세요. 실행 전 두 팔레트는 승인됐습니다. 원본 데이터 없는 수치나 결과는 만들지 마세요.",
+      "expected_output": "Two valid palette-selected clips; identical geometry/timing, resolved palette records and review sheets.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "kkumil-pink",
+      "prompt": "꾸밀걸 설명 영상에 넣을 pink cutaway를 만들어주세요. kkumil-pink를 사용하고 짧은 카드에서 한국어 키워드가 읽히게 해주세요. 제공된 synthetic video와 SRT의 1~3초 구간에 넣는 계획은 승인됐습니다.",
+      "expected_output": "Kkumil #FF5C8D pink and CI cream palette, Korean glyphs, rendered full-frame cutaway, original-audio preview.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "onnimm-panel",
+      "prompt": "ONNIMM 설명 영상에 겹쳐 넣을 투명 패널 B-roll을 onnimm-orange로 만들어주세요. UI 기준 orange #FF8A50입니다. 제공된 synthetic video와 VTT의 1~3초 구간에 패널을 겹치는 계획은 승인됐습니다.",
+      "expected_output": "Transparent ProRes 4444 MOV using ONNIMM UI palette with insertion preview and safe metadata pages.",
+      "files": []
+    }
+  ]
+}

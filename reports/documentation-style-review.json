@@ -1,0 +1,37 @@
+{
+  "method": "manual editorial review; no classifier or scientific authorship certification",
+  "writing_guidelines_source": "https://raw.githubusercontent.com/vercel-labs/writing-guidelines/main/command.md",
+  "scope": "GitHub Markdown rules; Vercel MDX metadata and website framework rules do not apply",
+  "checks": [
+    "action-first openings",
+    "five-step task structure",
+    "sentence-case English headings",
+    "language-tagged fenced code",
+    "code blocks below 25 lines",
+    "relative file references",
+    "same commands and defaults across languages",
+    "preserved factual limits and fixed versions"
+  ],
+  "english_stop_slop": {
+    "scores": {
+      "directness": 9,
+      "rhythm": 8,
+      "trust": 9,
+      "authenticity": 8,
+      "density": 9
+    },
+    "total": 43,
+    "changes": [
+      "removed silent/accidental adverbs",
+      "named Claude Code as the execution actor",
+      "kept failure and approval constraints as concrete actions"
+    ]
+  },
+  "korean": {
+    "style": "technical document; 합니다 statements and 하세요 actions; code identifiers remain English",
+    "grammar": "manual spelling, spacing, particles and punctuation pass; standardized 원본 영상",
+    "humanizer": "manual pass across punctuation, spacing, noun-heavy phrasing, vocabulary, structure and translation patterns; no automatic AI detection",
+    "meaning": "versions, commands, defaults, outputs and blocked-versus-success status retained"
+  },
+  "cold_review": "one isolated read; P2 prerequisite gap corrected; no repeat review"
+}

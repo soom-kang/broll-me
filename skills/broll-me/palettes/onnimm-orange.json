@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "onnimm-orange",
+  "name": "Onnimm Orange",
+  "colors": {
+    "canvas": "#FCFBF8",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#FAE5D5",
+    "ink": "#354135",
+    "muted": "#5E6A59",
+    "border": "#E6E3DB",
+    "accent": "#FF8A50",
+    "accentDark": "#A8471B",
+    "onAccent": "#354135",
+    "inverseSurface": "#354135",
+    "inverseInk": "#FFFFFF",
+    "inverseMuted": "#BEC8B9",
+    "shadow": "#354135",
+    "honey": "#F1D3B2"
+  }
+}
