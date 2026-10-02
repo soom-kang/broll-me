@@ -51,6 +51,20 @@ inputs/source.srt
 inputs/notes.json       # optional
 ```
 
+파일을 읽기 전에 작업 프로젝트의 절대 경로를 확정하세요. 설치된 skill 폴더와 구분합니다. 입력 경로를 생략하면 `inputs/`에서 찾고, 영상·자막 조합이 여러 개이거나 필수 입력이 없으면 선택을 질문합니다. 파일 없는 standalone 요청도 문구나 데이터가 충분하면 진행합니다.
+
+`palette-card`처럼 짧은 English 작업명을 정해 `works/<task>/`, `outputs/<task>/`에 사용합니다. 어느 한쪽에 같은 이름이 있으면 `palette-card-02`, 다음에는 `-03`을 선택합니다. 명시적인 이어하기 요청에만 기존 작업을 재사용합니다. 사용자가 지정한 입력·결과 경로는 기본값보다 우선하며, 원본과 이전 결과를 보존합니다.
+
+```text
+<project>/
+├── inputs/                     supplied files
+├── works/
+│   ├── .runtime/broll-me/       shared rendering runtime
+│   └── palette-card/           scene sources, plan, inspection, drafts, logs
+└── outputs/
+    └── palette-card/           final media and review files
+```
+
 `warm-orange`가 기본 팔레트입니다. `sage-cream`, `editorial-blue`, `midnight-cyan`, `kkumil-pink`, `onnimm-orange`도 선택할 수 있습니다. 지정한 브랜드나 팔레트가 있으면 기본값보다 우선합니다. Custom JSON은 13개 역할을 모두 `#RRGGBB`로 지정해야 합니다. [팔레트 안내](palettes.md)를 확인하세요. 잘못된 색상이나 대비는 HTML 출력 전에 실패합니다.
 
 렌더링 전에 아래 실행 파일을 준비하세요. Setup은 시스템 도구를 설치하지 않습니다. 기본 실행 파일의 버전이 다르면 맞는 경로를 지정하세요.
@@ -63,7 +77,7 @@ inputs/notes.json       # optional
 | 로컬 module | Playwright `1.62.1`, NumPy `2.3.5` |
 | Chromium | Revision `1234`, version `151.0.7922.34` |
 
-Agent는 설치된 `SKILL.md` 위치를 찾고 `doctor`를 실행합니다. 준비된 runtime은 재사용합니다. 로컬 렌더링이 승인된 작업이고 실행 파일의 버전이 맞으면 `setup.sh`로 module과 Chromium을 프로젝트 내부에 설치할 수 있습니다. 전역 설정은 변경하지 않습니다. 실행 파일 누락, 버전 불일치, browser 권한 오류가 나면 실제 오류와 다음 행동을 보고합니다. [Runtime 복구](troubleshooting.md#runtime-and-browser)를 참고하세요.
+Agent는 설치된 `SKILL.md`를 찾고, 지정한 runtime이나 기본 `works/.runtime/broll-me/`를 선택합니다. `doctor` 등 browser 검사 전에 `BROLL_RUNTIME`을 설정하고 준비된 runtime을 재사용합니다. 로컬 렌더링이 승인된 작업이고 실행 파일의 버전이 맞으면 해당 경로에 `setup.sh`를 실행할 수 있습니다. 실행 파일 누락, 버전 불일치, browser 권한 오류가 나면 해당 단계를 중단하고 실제 오류와 다음 행동을 보고합니다. [Runtime 복구](troubleshooting.md#runtime-and-browser)를 참고하세요. 지속적인 중간 파일은 `works/<task>/`에 저장하며, engine의 atomic 저장용 temp와 OS temp는 기존 동작을 유지합니다.
 
 ## 3. 프롬프트 실행하기
 
@@ -76,7 +90,7 @@ inputs/notes.json이 있으면 함께 참고해 주세요. kkumil-pink 팔레트
 도입부의 화자는 그대로 보여 주세요. 자막을 보고 삽입 시간을 제안한 뒤
 draft를 보여 주세요. 원본을 보존하고 preview에는 원본 오디오를 복사해 주세요.
 최종 clip, preview.mp4, viewer.html, compare.html, TIMING.md를
-motion/out에 저장해 로컬에서 확인할 수 있게 해 주세요.
+outputs/palette-card에 저장해 로컬에서 확인할 수 있게 해 주세요.
 ```
 
 Standalone은 다음처럼 요청하세요.
@@ -102,11 +116,11 @@ Draft는 frame당 한 번 캡처하며 motion blur를 생략합니다. Final은 
 
 ## 5. 최종 파일 받기
 
-Standalone은 최종 MP4나 alpha MOV, scene HTML, 팔레트 snapshot, 주요 frame을 받습니다. 영상이 없으면 원본 검사나 오디오 보존을 완료했다고 보고하지 않습니다.
+최종 파일은 `outputs/<task>/`에 저장합니다. Author/build만 요청하면 spec, HTML bundle, 결과 경로를 전달하고 browser 검사와 재생 확인은 실행하지 않았다고 보고합니다. 렌더링과 preview 합성은 요청 범위에 포함된 경우 진행합니다. Standalone media delivery는 최종 MP4나 alpha MOV, scene HTML, 팔레트 snapshot, 주요 frame을 받습니다. 영상이 없으면 원본 검사나 오디오 보존을 완료했다고 보고하지 않습니다.
 
 원본 영상 작업은 `preview.mp4`, `viewer.html`, `compare.html`, `TIMING.md`도 받습니다. 전체 화면 card는 MP4와 `kind:full`을 사용합니다. Panel은 `bg:null`을 유지하며 ProRes 4444 MOV와 `kind:panel`을 사용합니다. 검토 페이지가 참조하는 clip과 입력 파일의 경로를 유지하세요. Preview로 삽입을 검토하고, 최종 master는 편집자가 승인합니다.
 
-Shared font HTML은 옆의 `assets/broll-me-fonts/` 폴더와 함께 전달하세요. Build나 preview에서 `--font-mode embedded`를 선택하면 개별 HTML을 파일 하나로 전달할 수 있습니다. 두 방식 모두 font 고지를 유지합니다.
+Final 렌더링 전에 scene bundle 전체를 `outputs/<task>/scenes/<scene>/`에 복사하세요. HTML, `palette.resolved.json`, shared `assets/broll-me-fonts/`, 필요한 local assets를 포함합니다. 전달 위치에서 참조를 확인하세요. 최종 scene과 검토 파일이 `works/`에 의존하면 안 됩니다. `compare.html`은 `inputs/`의 원본을 참조할 수 있습니다. 확인하지 못한 custom resource가 있으면 전달 완료로 보고하지 않습니다. Build나 preview에서 `--font-mode embedded`를 선택하면 개별 HTML을 파일 하나로 전달할 수 있습니다. 두 방식 모두 font 고지를 유지합니다.
 
 Preview는 원본 파일을 보존하고 audio stream을 복사합니다. Video와 audio가 0에서 시작해야 하며, audio는 video 길이 안에 들어오고 MP4와 호환되어야 합니다. 지원하지 않는 timing이나 codec은 실패합니다. 승인된 호환 입력 사본을 제공하거나 별도 오디오 편집을 진행하세요. Skill은 복구를 위해 원본 오디오를 임의로 정규화하거나 자르거나 변환하지 않습니다. 삽입 구간이 clip보다 길면 마지막 frame을 끝까지 유지합니다.
 
@@ -118,10 +132,10 @@ Preview는 원본 파일을 보존하고 audio stream을 복사합니다. Video�
 
 ```bash
 export BROLL_SKILL_DIR="$PWD/.agents/skills/broll-me"
-export BROLL_RUNTIME="$PWD/motion"
+export BROLL_RUNTIME="${BROLL_RUNTIME:-$PWD/works/.runtime/broll-me}"
 ```
 
-Runtime은 `--runtime PATH`, `BROLL_RUNTIME`, `./motion` 순서로 선택합니다. 필요하면 `BROLL_NODE`, `BROLL_PYTHON`, `BROLL_FFMPEG`, `BROLL_FFPROBE`, `BROLL_NPM`에 고정 버전의 실행 파일 경로를 지정하세요. Setup 전에 버전과 encoder를 확인하세요.
+작업 프로젝트에서 명령을 실행하세요. 지정한 준비된 runtime이 있으면 그 절대 경로를 설정합니다. 직접 CLI 실행의 runtime 선택 순서는 `--runtime PATH`, `BROLL_RUNTIME`, `./motion`으로 유지합니다. Skill은 검사 전에 선택한 runtime을 설정합니다. 필요하면 `BROLL_NODE`, `BROLL_PYTHON`, `BROLL_FFMPEG`, `BROLL_FFPROBE`, `BROLL_NPM`에 고정 버전의 실행 파일 경로를 지정하세요. Setup 전에 버전과 encoder를 확인하세요.
 
 ```bash
 "${BROLL_NODE:-node}" --version
@@ -142,11 +156,11 @@ python3 "$BROLL_SKILL_DIR/scripts/broll.py" doctor
 
 ## 고급: standalone 직접 렌더링하기
 
-작은 장면 하나를 작성한 뒤 build, check, render를 실행하세요.
+작은 장면 하나를 작성한 뒤 build, check, draft render를 실행하세요. 예시는 `works/`, `outputs/` 양쪽에 `palette-card`가 없는 경우입니다. 이미 있으면 suffix를 붙인 작업명으로 바꾸세요.
 
 ```bash
-mkdir -p motion
-cat > motion/scene.json <<'JSON'
+mkdir -p works/palette-card
+cat > works/palette-card/scene.json <<'JSON'
 {
   "schema_version": 1,
   "template": "card",
@@ -157,37 +171,45 @@ cat > motion/scene.json <<'JSON'
   "duration": 1
 }
 JSON
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" build motion/built \
-  --scene motion/scene.json --palette kkumil-pink
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" check motion/built/scene.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" build works/palette-card/built \
+  --scene works/palette-card/scene.json --palette kkumil-pink
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check works/palette-card/built/scene.html
 python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
-  motion/built/scene.html motion/out/scene-draft.mp4 --quality draft
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
-  motion/built/scene.html motion/out/scene.mp4 --quality final
+  works/palette-card/built/scene.html works/palette-card/scene-draft.mp4 --quality draft
 ```
 
-`scene.html`, `palette.resolved.json`, shared font와 MP4 2개가 생성됩니다. 입력이 잘못되면 표시된 field를 고치세요. 다른 팔레트는 새 build 폴더를 사용하세요. 필요하면 `--fps 30000/1001`을 추가합니다. 기본 렌더링은 30 FPS입니다. Alpha는 panel scene과 `.mov`를 사용하세요. Beats, inspect 등은 [CLI 사용법](usage.md)을 참고하세요.
+Draft 승인 뒤 bundle을 전달 위치에 복사하고 그 위치에서 final을 렌더링하세요.
+
+```bash
+mkdir -p outputs/palette-card/scenes/scene
+cp -R works/palette-card/built/. outputs/palette-card/scenes/scene/
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check outputs/palette-card/scenes/scene/scene.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
+  outputs/palette-card/scenes/scene/scene.html outputs/palette-card/scene.mp4 --quality final
+```
+
+Draft는 `works/palette-card/`에, 최종 MP4와 scene bundle은 `outputs/palette-card/`에 둡니다. Final 검사 전에 custom local assets도 참조 경로를 유지하며 복사하세요. 입력이 잘못되면 표시된 field를 고치세요. 다른 팔레트는 새 build 폴더를 사용하세요. 필요하면 `--fps 30000/1001`을 추가합니다. 기본 렌더링은 30 FPS입니다. Alpha는 panel scene과 `.mov`를 사용하세요. Beats, inspect 등은 [CLI 사용법](usage.md)을 참고하세요.
 
 ## 고급: 삽입 preview 직접 만들기
 
 장면 작성 전에 원본과 자막을 확인하세요.
 
 ```bash
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" inspect inputs/source.mp4 motion/work
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" inspect inputs/source.mp4 works/palette-card/inspection
 python3 "$BROLL_SKILL_DIR/scripts/broll.py" words inputs/source.srt
 ```
 
-`video.json`, `contact.png`, 추정 word time이 출력됩니다. 검사한 width, height, FPS로 승인된 장면을 build, check, render하세요. Plan에 경로와 승인된 시간을 넣습니다. 상대 경로는 plan 파일을 기준으로 해석합니다.
+`video.json`, `contact.png`, 추정 word time이 출력됩니다. 검사한 width, height, FPS로 승인된 장면을 build, check, render하세요. Plan은 `works/palette-card/plan.json`에 저장합니다. 상대 경로는 명령을 실행한 위치가 아닌 해당 plan 파일을 기준으로 해석합니다.
 
 ```json
 {
-  "video": "../inputs/source.mp4",
+  "video": "../../inputs/source.mp4",
   "fps": "30000/1001",
   "clips": [{
     "id": "01",
     "title": "Approved card",
     "line": "Exact supplied subtitle text",
-    "file": "out/scene.mp4",
+    "file": "../../outputs/palette-card/scene.mp4",
     "kind": "full",
     "in": 1,
     "out": 3
@@ -199,7 +221,8 @@ python3 "$BROLL_SKILL_DIR/scripts/broll.py" words inputs/source.srt
 예시에는 3초 이상의 영상이 필요합니다. 검사한 원본과 승인된 plan에 맞게 시간과 FPS를 바꾼 뒤 실행하세요.
 
 ```bash
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview motion/plan.json motion/out/preview.mp4
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview \
+  works/palette-card/plan.json outputs/palette-card/preview.mp4
 ```
 
 Preview, HTML 검토 페이지, timing 문서, shared font가 생성됩니다. 파일 누락, clip 겹침, 범위를 벗어난 시간은 실패합니다. Plan을 고치고 다시 실행하세요. 오디오나 encoder 오류는 [Media 복구](troubleshooting.md#media-and-delivery)를 참고하세요.

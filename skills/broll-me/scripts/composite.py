@@ -1,5 +1,5 @@
 """Create a review preview with hard-cut B-roll and stream-copied source audio.
-Usage: python3 composite.py motion/plan.json motion/out/preview.mp4
+Usage: python3 composite.py works/palette-card/plan.json outputs/palette-card/preview.mp4
 """
 import argparse
 from pathlib import Path

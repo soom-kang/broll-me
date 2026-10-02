@@ -1,4 +1,4 @@
 interface:
   display_name: "broll-me"
   short_description: "Branded B-roll templates and transparent video panels"
-  default_prompt: "Use $broll-me to create a palette-driven B-roll insert with the common CLI and scene templates. Follow my approved plan and preserve the source video and audio."
+  default_prompt: "Use $broll-me with the common CLI and scene templates. Default to inputs/ in my calling project, keep intermediate files in works/<task>/, and deliver final files under outputs/<task>/. Honor my explicit paths, follow my approved plan, and preserve the source video and audio."

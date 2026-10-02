@@ -1,6 +1,6 @@
 # Write a scene template
 
-Save one SceneSpec JSON and build it with the common CLI. Reuse the same JSON in separate output folders to compare palettes while keeping content, geometry and timing.
+Save one SceneSpec JSON in `works/<task>/` and build it with the common CLI. Reuse the same JSON in separate build folders to compare palettes while keeping content, geometry and timing. Supplied briefs and data belong in `inputs/`; explicit user paths take precedence.
 
 ```json
 {
@@ -31,14 +31,26 @@ Select the palette through `--palette` or `--palette-file`, outside the SceneSpe
 
 ## Build and check
 
-Set `BROLL_SKILL_DIR` and `BROLL_RUNTIME` as shown in [the workflow](workflow.md). Save your JSON as `card.json` before running these commands.
+Set `BROLL_SKILL_DIR` and `BROLL_RUNTIME` as shown in [the workflow](workflow.md), before browser checks. Save your JSON as `works/palette-card/scene.json` before running these commands. Use a suffixed task name when `palette-card` exists in either `works/` or `outputs/`, unless continuing that task.
 
 ```bash
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" build motion/pink \
-  --scene card.json --palette kkumil-pink
-python3 "$BROLL_SKILL_DIR/scripts/broll.py" check motion/pink/card.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" build works/palette-card/built \
+  --scene works/palette-card/scene.json --palette kkumil-pink
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check works/palette-card/built/scene.html
 python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
-  motion/pink/card.html motion/out/card.mp4 --fps 30
+  works/palette-card/built/scene.html works/palette-card/scene-draft.mp4 --fps 30 --quality draft
 ```
+
+After draft approval, copy the bundle and render final media from its delivered location:
+
+```bash
+mkdir -p outputs/palette-card/scenes/scene
+cp -R works/palette-card/built/. outputs/palette-card/scenes/scene/
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check outputs/palette-card/scenes/scene/scene.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
+  outputs/palette-card/scenes/scene/scene.html outputs/palette-card/scene.mp4 --fps 30 --quality final
+```
+
+Keep `scene.html`, `palette.resolved.json`, shared fonts and required local assets together. Check their delivered references; final files must not depend on `works/`. Report unresolved custom resources before claiming delivery complete. The [workflow](workflow.md#advanced-compose-inserts-manually) shows plan paths and preview delivery.
 
 Missing content, invalid geometry, duration or chart values cause failure before output. The builder escapes wording as text. If `check` reports text overflow, shorten the wording, adjust layout or split the message. Review typography and motion yourself before delivery; do not omit approved content without approval to pass a check.

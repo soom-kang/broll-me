@@ -1,5 +1,5 @@
 """Write local-font review pages and the editor timing sheet.
-Usage: python3 make_pages.py motion/plan.json motion/out/preview.mp4
+Usage: python3 make_pages.py works/palette-card/plan.json outputs/palette-card/preview.mp4
 """
 import argparse
 import html

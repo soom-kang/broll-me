@@ -3,11 +3,13 @@ from fractions import Fraction
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "broll-me"
@@ -147,6 +149,84 @@ class ReviewAndLayoutTests(unittest.TestCase):
         self.assertEqual(sections[0]["layout"], "unknown")
         self.assertNotIn("subject_box", sections[0])
         self.assertFalse(sections[0]["verified"])
+
+
+class ProjectFolderDeliveryTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="broll-project-delivery-")
+        self.directory = Path(self.temp.name).resolve()
+        self.inputs = self.directory / "inputs"
+        self.work = self.directory / "works" / "folder-routing"
+        self.output = self.directory / "outputs" / "folder-routing"
+        for folder in [self.inputs, self.work, self.output]:
+            folder.mkdir(parents=True)
+        self.source = self.inputs / "source.mp4"
+        self.clip = self.output / "clip with spaces.mp4"
+        self.preview = self.output / "preview.mp4"
+        for path, content in [(self.source, b"source fixture"), (self.clip, b"clip fixture"), (self.preview, b"previous preview")]:
+            path.write_bytes(content)
+        self.plan = {
+            "title": "Project folder delivery", "video": "../../inputs/source.mp4", "fps": "30000/1001",
+            "clips": [{"id": "01", "title": "clip", "in": 2, "out": 8, "kind": "full", "file": "../../outputs/folder-routing/clip with spaces.mp4"}],
+        }
+        self.plan_path = self.work / "plan.json"
+        self.write_plan()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def write_plan(self):
+        self.plan_path.write_text(json.dumps(self.plan), encoding="utf-8")
+
+    def fake_probe(self, path):
+        return info(1 if Path(path) == self.clip else 10)
+
+    def test_plan_resolves_inputs_and_outputs_from_work_directory(self):
+        with patch.object(media, "probe", side_effect=self.fake_probe):
+            _, source, _, clips = media.load_plan(self.plan_path)
+        self.assertEqual(source, self.source.resolve())
+        self.assertEqual(clips[0]["path"], self.clip.resolve())
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+
+    def test_review_pages_and_shared_fonts_survive_work_directory_removal(self):
+        with patch.object(media, "probe", side_effect=self.fake_probe), patch.object(make_pages, "probe", side_effect=self.fake_probe):
+            pages = make_pages.write_pages(self.plan_path, self.preview, font_mode="shared")
+        self.assertEqual(pages, [self.output / name for name in ["viewer.html", "compare.html", "TIMING.md"]])
+        shutil.rmtree(self.directory / "works")
+        viewer = pages[0].read_text(encoding="utf-8")
+        comparison = pages[1].read_text(encoding="utf-8")
+        clips = json.loads(viewer.split("const CLIPS=", 1)[1].split(";", 1)[0])
+        self.assertEqual([clip["src"] for clip in clips], ["preview.mp4", "clip%20with%20spaces.mp4"])
+        comparison_sources = re.findall(r'<video[^>]+src="([^"]+)"', comparison)
+        self.assertEqual(comparison_sources, ["../../inputs/source.mp4", "preview.mp4", "../../inputs/source.mp4", "preview.mp4"])
+        for source in [*(clip["src"] for clip in clips), *comparison_sources]:
+            with self.subTest(source=source):
+                self.assertTrue((self.output / unquote(source)).resolve().is_file())
+        for page in [viewer, comparison]:
+            self.assertNotIn("works/", page)
+            font_urls = re.findall(r"url\('([^']+)'\)", page)
+            self.assertEqual(len(font_urls), 3)
+            for font_url in font_urls:
+                self.assertTrue(font_url.startswith("assets/broll-me-fonts/"))
+                self.assertTrue((self.output / font_url).is_file())
+        for notice in ["OFL-Geist.txt", "OFL-NotoSansKR.txt"]:
+            self.assertTrue((self.output / "assets" / "broll-me-fonts" / notice).is_file())
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+
+    def test_wrong_input_depth_fails_before_publishing_or_changing_media(self):
+        self.plan["video"] = "../inputs/source.mp4"
+        self.write_plan()
+        with patch.object(media, "probe") as source_probe, patch.object(make_pages, "probe") as preview_probe:
+            with self.assertRaisesRegex(media.MediaError, "Input file not found"):
+                make_pages.write_pages(self.plan_path, self.preview, font_mode="shared")
+        source_probe.assert_not_called()
+        preview_probe.assert_not_called()
+        for name in ["viewer.html", "compare.html", "TIMING.md", "assets"]:
+            self.assertFalse((self.output / name).exists())
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertEqual(self.clip.read_bytes(), b"clip fixture")
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
 
 
 class SourceTimelineTests(unittest.TestCase):

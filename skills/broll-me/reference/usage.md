@@ -4,15 +4,15 @@ Use `scripts/broll.py` in either host. For the default project-local `npx skills
 
 ```bash
 export BROLL_SKILL_DIR="$PWD/.agents/skills/broll-me"
-export BROLL_RUNTIME="$PWD/motion"
+export BROLL_RUNTIME="${BROLL_RUNTIME:-$PWD/works/.runtime/broll-me}"
 python3 "$BROLL_SKILL_DIR/scripts/broll.py" doctor
 ```
 
-Runtime selection follows `--runtime PATH`, then `BROLL_RUNTIME`, then `./motion`. The CLI connects that runtime’s `.venv/bin/python`, `node_modules` and `browsers`. Executable overrides are `BROLL_PYTHON`, `BROLL_NODE`, `BROLL_FFMPEG`, `BROLL_FFPROBE` and `BROLL_CHROMIUM`. The browser override must match the fixed profile too.
+Run from the working project, separate from the installed skill folder. Reuse an explicit runtime by setting its absolute path before these commands. The skill's default is `works/.runtime/broll-me/`; direct CLI selection remains `--runtime PATH`, then `BROLL_RUNTIME`, then `./motion`. The CLI connects that runtime’s `.venv/bin/python`, `node_modules` and `browsers`. Executable overrides are `BROLL_PYTHON`, `BROLL_NODE`, `BROLL_FFMPEG`, `BROLL_FFPROBE` and `BROLL_CHROMIUM`. The browser override must match the fixed profile too. A failure in the selected runtime requires a reported error before retrying the affected step.
 
 ## Choose the command
 
-Place `--runtime` before the subcommand. Paths below are command arguments; replace them with your actual files.
+Place `--runtime` before the subcommand. Paths below are explicit command arguments; the CLI does not choose task folders. For skill work, use `inputs/` for supplied files, `works/<task>/` for persistent intermediates and drafts, and `outputs/<task>/` for final files. Explicit user paths take precedence. Choose a short English task name; suffix it with `-02`, then `-03`, if it exists in either work or output folder. An explicit continuation reuses the task. Ask about missing required inputs or ambiguous video/subtitle pairs. A standalone prompt with supplied wording or data needs no input file.
 
 | Command arguments | Result | On failure |
 | --- | --- | --- |
@@ -27,6 +27,15 @@ Place `--runtime` before the subcommand. Paths below are command arguments; repl
 | `preview PLAN.json OUT.mp4` | Composite, viewer, compare, timing notes and fonts | Correct the plan or supply an approved compatible input copy |
 
 Build accepts `--palette ID` or `--palette-file custom.json`, defaulting to `warm-orange`. Render accepts `--fps RATE` (default `30`) and `--quality final|draft` (default `final`). Rational FPS such as `30000/1001` is supported. Build and preview accept `--font-mode shared|embedded`, defaulting to `shared` in this CLI.
+
+Save a plan at `works/palette-card/plan.json` with `video: "../../inputs/source.mp4"` and clip `file: "../../outputs/palette-card/scene.mp4"`. Plan paths resolve from the plan file. After rendering final clips in `outputs/palette-card/`, create review files there:
+
+```bash
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview \
+  works/palette-card/plan.json outputs/palette-card/preview.mp4
+```
+
+Deliver scene HTML with its palette snapshot, fonts and required local assets in `outputs/<task>/scenes/<scene>/`. Check references after copying the bundle and render from that location. Final references must not depend on `works/`; `compare.html` may reference the source in `inputs/`. Preserve prior results on failure and report unresolved custom resources before claiming delivery complete. Engine atomic temporary files and OS temporary files keep their existing behavior.
 
 ## Read the result
 

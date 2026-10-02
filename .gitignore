@@ -4,6 +4,9 @@ skills/broll-me-workspace/
 .venv/
 .dev-venv/
 motion/
+/inputs/
+/works/
+/outputs/
 dist/
 __pycache__/
 *.pyc

@@ -34,7 +34,7 @@ npx skills list --agent codex claude-code
 
 ## 2. 영상과 자막 준비하기
 
-같은 영상의 파일을 프로젝트에 넣거나 agent에게 읽을 수 있는 절대 경로를 알려 주세요. SRT와 VTT를 지원합니다. 노트는 선택 항목이며, 삽입 작업에는 시간이 표시된 자막이 필요합니다. Standalone clip은 영상 대신 문구나 chart 데이터를 제공하세요.
+같은 영상의 파일을 프로젝트의 `inputs/` 폴더에 넣거나 agent에게 읽을 수 있는 경로를 알려 주세요. SRT와 VTT를 지원합니다. 노트는 선택 항목이며, 삽입 작업에는 시간이 표시된 자막이 필요합니다. Standalone clip은 파일이나 요청에 문구·chart 데이터를 제공하세요.
 
 ```text
 inputs/source.mp4
@@ -42,7 +42,13 @@ inputs/source.srt
 inputs/notes.json       # optional
 ```
 
+Agent는 파일을 읽기 전에 작업 프로젝트의 절대 경로를 확정합니다. 입력 경로를 생략하면 `inputs/`에서 찾습니다. 영상·자막 조합이 여러 개이거나 필수 입력이 없으면 선택을 질문합니다. 파일 없는 standalone 요청도 문구나 데이터가 충분하면 진행합니다.
+
+Plan, scene source, inspection, draft, log는 `works/<task>/`에, 최종 파일은 `outputs/<task>/`에 저장합니다. `palette-card`처럼 짧은 English 작업명을 정하고, 어느 한쪽 폴더에 같은 이름이 있으면 `-02` 같은 suffix를 붙입니다. 명시적인 이어하기 요청에는 지정한 작업을 재사용합니다. 사용자가 지정한 입력·결과 경로는 기본값보다 우선하며, 원본과 기존 결과를 보존합니다.
+
 Skill 설치로 지침과 엔진 파일을 받습니다. 렌더링에는 아래 고정 버전의 로컬 runtime도 필요합니다. Agent는 렌더링 전에 runtime을 확인하고, 필요한 실행 파일이 있으면 프로젝트 내부에 setup할 수 있습니다. 실행 파일이나 browser 권한이 없으면 원인을 보고합니다.
+
+지정한 runtime이 있으면 재사용합니다. 지정하지 않으면 `works/.runtime/broll-me/`를 선택하고 browser 검사 전에 `BROLL_RUNTIME`을 설정합니다. 선택한 runtime이 실패하면 오류를 보고하고 해당 단계를 중단합니다.
 
 | 구성 요소 | 필수 버전 |
 | --- | --- |
@@ -63,7 +69,7 @@ inputs/notes.json이 있으면 함께 참고해 주세요. kkumil-pink 팔레트
 도입부의 화자는 그대로 보여 주세요. 자막에서 짧은 삽입 구간을 제안한 뒤
 draft를 보여 주세요. 원본을 보존하고 preview에는 원본 오디오를 복사해 주세요.
 최종 clip, preview.mp4, viewer.html, compare.html, TIMING.md를
-motion/out에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
+outputs/palette-card에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
 ```
 
 **Claude Code**에서는 같은 요청을 `/broll-me`로 시작하세요.
@@ -76,7 +82,7 @@ inputs/notes.json이 있으면 함께 참고해 주세요. kkumil-pink 팔레트
 도입부의 화자는 그대로 보여 주세요. 자막에서 짧은 삽입 구간을 제안한 뒤
 draft를 보여 주세요. 원본을 보존하고 preview에는 원본 오디오를 복사해 주세요.
 최종 clip, preview.mp4, viewer.html, compare.html, TIMING.md를
-motion/out에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
+outputs/palette-card에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
 ```
 
 내용과 파일 경로를 자신의 작업에 맞게 바꾸세요. 문서 상단의 비교를 재현하려면 준비된 샘플과 [샘플 재현 프롬프트](docs/pink-demo.ko.md#샘플-재현하기)를 사용하세요. 참고로 제공된 기존 전체 preview를 현재 broll-me 결과로 표시하지 않습니다.
@@ -93,7 +99,7 @@ SRT/VTT에서 나눈 word timing은 추정치이므로 재생하며 확인하세
 
 ## 5. 결과물 받기
 
-원본 영상 삽입 작업에서는 다음 파일을 받습니다.
+원본 영상 삽입 작업에서는 `outputs/<task>/`에 다음 파일을 받습니다.
 
 | 출력 | 용도 |
 | --- | --- |
@@ -103,7 +109,7 @@ SRT/VTT에서 나눈 word timing은 추정치이므로 재생하며 확인하세
 | `TIMING.md` | clip의 삽입 시간과 인용한 발화를 확인합니다 |
 | Scene HTML, `palette.resolved.json` | 장면을 수정하고 확정된 색상을 확인합니다 |
 
-Shared font HTML은 옆의 `assets/broll-me-fonts/` 폴더와 함께 전달하세요. HTML 하나로 전달하려면 `--font-mode embedded`를 선택하세요. Preview는 입력 오디오 stream을 복사합니다. 지원하지 않는 원본 timing이나 MP4와 호환되지 않는 오디오는 명확한 오류로 끝납니다. Skill은 복구 과정에서 원본 오디오를 임의로 정규화하거나 변환하지 않습니다.
+Scene HTML은 팔레트 snapshot, shared `assets/broll-me-fonts/` 폴더, 필요한 local assets와 함께 전달합니다. Agent는 최종 참조가 `works/`에 의존하지 않는지 확인합니다. `compare.html`은 `inputs/`의 원본을 참조할 수 있습니다. 확인하지 못한 custom resource가 있으면 전달 완료로 보고하지 않습니다. HTML 하나로 전달하려면 `--font-mode embedded`를 선택하세요. Preview는 입력 오디오 stream을 복사합니다. 지원하지 않는 원본 timing이나 MP4와 호환되지 않는 오디오는 명확한 오류로 끝납니다. Skill은 복구 과정에서 원본 오디오를 임의로 정규화하거나 변환하지 않습니다.
 
 Setup, 수동 CLI, 팔레트 변경, archive 설치는 [한국어 사용 가이드](skills/broll-me/reference/workflow.ko.md)나 [English workflow](skills/broll-me/reference/workflow.md)를 참고하세요.
 

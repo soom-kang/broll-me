@@ -34,7 +34,7 @@ If `npx` is missing, provide Node.js and npm first. If the source cannot be fetc
 
 ## 2. Provide your video and subtitles
 
-Put matching files in your project, or give the agent readable absolute paths. SRT and VTT both work. Notes are optional; the timed transcript is required for inserts. For a standalone clip, provide the wording or chart data instead.
+Put matching files in your project's `inputs/` folder, or give the agent readable paths. SRT and VTT both work. Notes are optional; the timed transcript is required for inserts. For a standalone clip, provide the wording or chart data in a file or in your request.
 
 ```text
 inputs/source.mp4
@@ -42,7 +42,13 @@ inputs/source.srt
 inputs/notes.json       # optional
 ```
 
+The agent resolves the working project's absolute path before reading files. Without explicit input paths, it looks in `inputs/` and asks you to choose when multiple video/subtitle pairs match or a required input is missing. Supplied wording or data is enough for a standalone request without files.
+
+It keeps plans, scene sources, inspections, drafts and logs in `works/<task>/`, and delivers final files in `outputs/<task>/`. It chooses a short English task name such as `palette-card`; an existing name in either folder gets a suffix such as `-02`. An explicit continuation reuses the named task. Your input and output paths take precedence. The agent preserves originals and previous results.
+
 Skill installation adds instructions and engine files. Rendering also needs the pinned local runtime below. The agent checks it before rendering and can run project-local setup when the required binaries are available. It reports missing binaries or browser permissions instead of hiding the failure.
+
+It reuses a runtime you specify. Otherwise it selects `works/.runtime/broll-me/` and sets `BROLL_RUNTIME` before browser checks. A failure in that runtime stops the affected step with its error.
 
 | Component | Required version |
 | --- | --- |
@@ -63,7 +69,7 @@ cutaway about pigment mixtures and treatment photos. Keep the opening
 speaker footage visible. Propose a short insertion slot from the subtitles,
 then show a draft. Preserve the source and copy its audio into the preview.
 Deliver final clips, preview.mp4, viewer.html, compare.html and TIMING.md
-under motion/out so I can review them in this local workspace.
+under outputs/palette-card so I can review them in this local workspace.
 ```
 
 In **Claude Code**, use `/broll-me` with the same request:
@@ -76,7 +82,7 @@ cutaway about pigment mixtures and treatment photos. Keep the opening
 speaker footage visible. Propose a short insertion slot from the subtitles,
 then show a draft. Preserve the source and copy its audio into the preview.
 Deliver final clips, preview.mp4, viewer.html, compare.html and TIMING.md
-under motion/out so I can review them in this local workspace.
+under outputs/palette-card so I can review them in this local workspace.
 ```
 
 Replace the subject and paths with your own. To reproduce the comparison at the top, use the prepared sample and [exact sample prompt](docs/pink-demo.md#reproduce-the-sample). The existing full-length preview supplied as a reference is not presented as a current broll-me result.
@@ -93,7 +99,7 @@ SRT/VTT word timing is an estimate. Check it against playback. If text clips, sh
 
 ## 5. Receive the result
 
-Expect these files for source-video inserts:
+Expect these files under `outputs/<task>/` for source-video inserts:
 
 | Output | Use |
 | --- | --- |
@@ -103,7 +109,7 @@ Expect these files for source-video inserts:
 | `TIMING.md` | Check each clip's insertion time and quoted speech |
 | Scene HTML and `palette.resolved.json` | Edit the scene and inspect its resolved colors |
 
-Send shared-font HTML with its adjacent `assets/broll-me-fonts/` folder. Select `--font-mode embedded` when you need one HTML file. Previews copy the input audio stream; unsupported source timing or MP4-incompatible audio causes an explicit failure. The skill does not normalize or transcode source audio as a fallback.
+Scene HTML travels with its palette snapshot, shared `assets/broll-me-fonts/` folder and required local assets. The agent checks that final references do not depend on `works/`; `compare.html` may still reference the original in `inputs/`. It reports unresolved custom resources before claiming delivery complete. Select `--font-mode embedded` when you need one HTML file. Previews copy the input audio stream; unsupported source timing or MP4-incompatible audio causes an explicit failure. The skill does not normalize or transcode source audio as a fallback.
 
 Follow the [English workflow](skills/broll-me/reference/workflow.md) or [한국어 사용 가이드](skills/broll-me/reference/workflow.ko.md) for setup, manual CLI commands, palette changes and archive installation.
 

@@ -1,6 +1,6 @@
 # Writing a clip
 
-A clip is a small HTML fragment in `motion/clips/NN-name.html`. Build it through `broll.py build` or the existing `engine/build.py`. The common CLI uses shared local fonts; direct build calls retain embedded fonts by default. In either mode, `seek(t)` draws the frame at time `t`. Every style is a pure function of `t`: no CSS transitions, no timers, no state carried between frames. That is what makes frame-by-frame rendering with motion blur possible. For standard cards, terminals, charts and panels, start with [SceneSpec templates](scenes.md).
+A clip is a small HTML fragment in `works/<task>/clips/NN-name.html`. Build it through `broll.py build` or the existing `engine/build.py`. The common CLI uses shared local fonts; direct build calls retain embedded fonts by default. In either mode, `seek(t)` draws the frame at time `t`. Every style is a pure function of `t`: no CSS transitions, no timers, no state carried between frames. That is what makes frame-by-frame rendering with motion blur possible. For standard cards, terminals, charts and panels, start with [SceneSpec templates](scenes.md).
 
 `M.scene` validates state references, positive geometry, ordered in-range timing, layer element references and cursor input before changing the DOM. Custom callbacks and authored colors remain available. `broll.py check` then seeks the scene's key times and checks visible template text marked with `data-broll-text` for overflow. It reports sampled times when a scene has more than 64 distinct check times; visual review is still required.
 
@@ -43,6 +43,30 @@ M.scene({
 Coordinates are **world pixels**. The shape is centred at world (0,0) unless `geom` moves it (`g.cx`, `g.cy`). The camera draws world → screen as `center + cam × (world − focus)`. Choose `cam` per state so the state fills the frame: roughly 1.2–1.6 for cards, 1.8–2.2 for pills. The cursor keeps a constant size on screen.
 
 Layer content is positioned relative to its anchor, e.g. `left:-330px; top:40px` inside an `anchor:'t'` layer = 330px left of centre, 40px below the shape's top edge. Top-anchored content rides the top edge when the shape grows.
+
+## Build and deliver a custom fragment
+
+Set `BROLL_SKILL_DIR` and `BROLL_RUNTIME` as shown in [the workflow](workflow.md). Save your fragment as `works/palette-card/clips/01-card.html`; choose a suffixed task name if it exists in either `works/` or `outputs/`, unless continuing that task. Build and review a draft:
+
+```bash
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" build works/palette-card/built \
+  works/palette-card/clips/01-card.html --palette kkumil-pink
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check works/palette-card/built/01-card.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
+  works/palette-card/built/01-card.html works/palette-card/scene-draft.mp4 --quality draft
+```
+
+After approval, copy the complete built bundle, including its palette snapshot and fonts, to `outputs/palette-card/scenes/scene/`. Copy custom local assets with their relative paths intact and check resource references from the delivered HTML before final rendering:
+
+```bash
+mkdir -p outputs/palette-card/scenes/scene
+cp -R works/palette-card/built/. outputs/palette-card/scenes/scene/
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" check outputs/palette-card/scenes/scene/01-card.html
+python3 "$BROLL_SKILL_DIR/scripts/broll.py" render \
+  outputs/palette-card/scenes/scene/01-card.html outputs/palette-card/scene.mp4 --quality final
+```
+
+Final resources must not depend on `works/`. Report a resource that cannot be verified before claiming delivery complete, and preserve prior results if a check or render fails. User-specified input and output paths take precedence; the installed skill folder holds instructions and engine files rather than task artifacts.
 
 ## Engine API (`window.M`)
 
@@ -93,17 +117,19 @@ Map what the speaker says onto these:
 
 ## plan.json
 
+Save this plan as `works/palette-card/plan.json`. The clip names below describe a multi-clip example; substitute your delivered media and approved source timings.
+
 ```json
 {
   "title": "Opus 5.5 · Age of Empires II",
-  "video": "work/source.mp4",
+  "video": "../../inputs/source.mp4",
   "fps": "30000/1001",
   "clips": [
-    {"id":"01","title":"Opus 5.5 drop","line":"“Opus 5.5 just came out …”","in":0.30,"out":6.75,"kind":"full","file":"out/01-opus-drop_0m00s30.mp4"},
-    {"id":"02","title":"Folder → Claude Code → four builds","line":"“I created a blank folder …”","in":6.75,"out":22.5,"kind":"panel","file":"out/02-pip-builds_0m06s75.mov"}
+    {"id":"01","title":"Opus 5.5 drop","line":"“Opus 5.5 just came out …”","in":0.30,"out":6.75,"kind":"full","file":"../../outputs/palette-card/01-opus-drop_0m00s30.mp4"},
+    {"id":"02","title":"Folder → Claude Code → four builds","line":"“I created a blank folder …”","in":6.75,"out":22.5,"kind":"panel","file":"../../outputs/palette-card/02-pip-builds_0m06s75.mov"}
   ],
   "notes": ["The typed prompt and the cost/time/tokens bars are illustrative."]
 }
 ```
 
-Paths are relative to `plan.json`. `out` is when the clip leaves the timeline; if the clip is shorter, the composite holds its last frame.
+Paths are relative to `plan.json`. Create the preview at `outputs/palette-card/preview.mp4` after final clips are in place; the CLI writes review pages, timing notes and fonts beside it. Only the comparison page may refer back to the source in `inputs/`. `out` is when the clip leaves the timeline; if the clip is shorter, the composite holds its last frame.
