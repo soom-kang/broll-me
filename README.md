@@ -30,13 +30,13 @@ Install one skill, then ask Codex or Claude Code to make motion-graphic B-roll f
 
 ## 1. Install with npx
 
-Open a terminal in the project where you will use the skill. Install with the [skills CLI](https://github.com/vercel-labs/skills#install-a-skill). After the repository is published, run:
+Open a terminal in the project where you will use the skill. Install the `v0.8.0-beta.1` release with the [skills CLI](https://github.com/vercel-labs/skills#install-a-skill):
 
 ```bash
-npx skills add soom-kang/broll-me --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
 ```
 
-**Publication pending:** `soom-kang/broll-me` is the planned GitHub source. This work does not publish it or verify remote installation. Until publication, install from a downloaded checkout or an extracted ZIP:
+This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1) for the verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
 
 ```bash
 # Replace this path with your checkout or extracted package folder.
@@ -156,7 +156,7 @@ Palette changes affect the generated graphic while preserving its content, geome
 
 ## Maintainer checks
 
-From this checkout, run `make check`, then `python3 scripts/package.py`. The [skill archive](dist/broll-me.skill), [ZIP](dist/broll-me.zip) and [hash manifest](dist/package-manifest.json) contain the installable skill. Demo footage, runtime files, evaluation records and private artwork stay outside those archives.
+From this checkout, run `make check`, then `python3 scripts/package.py` to generate local artifacts under `dist/`. Download the released [skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.zip) and [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/package-manifest.json) from GitHub Release assets. Demo footage, runtime files, evaluation records and private artwork stay outside those archives.
 
 See the [local installation and sample-render checks](reports/NPX_DOCUMENTATION.md) for earlier verification. The showcase above comes from a supplied broll-me production preview. Earlier host evaluations remain separate: Claude Code completed two fixture requests; Codex stopped at Chromium permission errors and received no quality score. See [host evidence](reports/ENGINE_IMPROVEMENTS.md). Human playback approval remains a separate check.
 

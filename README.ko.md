@@ -30,13 +30,13 @@ Skill 하나를 설치한 뒤 Codex나 Claude Code에 요청하세요. 제공한
 
 ## 1. npx로 설치하기
 
-Skill을 사용할 프로젝트에서 terminal을 여세요. [Skills CLI](https://github.com/vercel-labs/skills#install-a-skill)로 설치합니다. GitHub 저장소가 게시된 뒤에는 다음 명령을 사용하세요.
+Skill을 사용할 프로젝트에서 terminal을 여세요. [Skills CLI](https://github.com/vercel-labs/skills#install-a-skill)로 `v0.8.0-beta.1` 릴리즈를 설치합니다.
 
 ```bash
-npx skills add soom-kang/broll-me --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
 ```
 
-**저장소 게시 대기:** `soom-kang/broll-me`는 배포할 예정 주소입니다. 이번 작업에서는 게시하거나 원격 설치를 검증하지 않았습니다. 게시 전에는 내려받은 checkout이나 ZIP을 푼 폴더로 설치하세요.
+이 명령은 베타 태그를 선택합니다. 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
 
 ```bash
 # Replace this path with your checkout or extracted package folder.
@@ -154,7 +154,7 @@ Preset 하나를 고르거나 13개 색상 역할을 모두 담은 custom JSON�
 
 ## 유지보수 검사
 
-Checkout에서 `make check`, `python3 scripts/package.py`를 실행하세요. [Skill archive](dist/broll-me.skill), [ZIP](dist/broll-me.zip), [hash manifest](dist/package-manifest.json)에 설치 가능한 skill을 담습니다. 샘플 영상, runtime, 평가 기록, 비공개 artwork는 archive에 넣지 않습니다.
+Checkout에서 `make check`, `python3 scripts/package.py`를 실행하면 `dist/`에 로컬 배포물을 생성합니다. 릴리즈된 [Skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.zip), [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/package-manifest.json)는 GitHub Release assets에서 내려받으세요. 샘플 영상, runtime, 평가 기록, 비공개 artwork는 archive에 넣지 않습니다.
 
 이전에 수행한 로컬 설치와 샘플 렌더링은 [검증 기록](reports/NPX_DOCUMENTATION.md)에서 확인하세요. 문서 상단의 사례는 제공된 broll-me 제작 preview에서 추출했습니다. 기존 host 평가는 별도로 유지합니다. Claude Code는 fixture 요청 2건을 완료했고, Codex는 Chromium 권한 오류로 중단되어 품질 점수를 받지 않았습니다. [Host 실행 근거](reports/ENGINE_IMPROVEMENTS.md)를 참고하세요. 사용자 재생 승인은 별도로 확인해야 합니다.
 
