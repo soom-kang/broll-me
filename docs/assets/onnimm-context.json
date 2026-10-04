@@ -1,0 +1,62 @@
+{
+  "example": "consent-history context comparison",
+  "palette": "onnimm-orange",
+  "source_video": {
+    "name": "reference/onnimm-cafe-final.mp4",
+    "sha256": "2154b459ecb97231567bec25f73d3c1c75584d7dcb9c9b07bf52de680cbe5a2d"
+  },
+  "source_preview": {
+    "name": "preview.mp4",
+    "sha256": "30a3a47fbf75c618c0e2ec928d2ae01c4dbe672431e44f49666eb9e9a7158f25"
+  },
+  "range": {
+    "start_frame": 1972,
+    "end_frame_exclusive": 2507,
+    "start_seconds": 65.799066667,
+    "end_seconds": 83.650233333,
+    "frames": 535,
+    "duration_seconds": 17.851166667,
+    "fps": "30000/1001"
+  },
+  "output_segments": [
+    {
+      "kind": "speaker",
+      "frames": 150,
+      "start_seconds": 0,
+      "end_seconds": 5.005
+    },
+    {
+      "kind": "broll",
+      "frames": 235,
+      "start_seconds": 5.005,
+      "end_seconds": 12.846166667
+    },
+    {
+      "kind": "speaker",
+      "frames": 150,
+      "start_seconds": 12.846166667,
+      "end_seconds": 17.851166667
+    }
+  ],
+  "excerpt_video": {
+    "width": 1920,
+    "height": 1080,
+    "codec": "h264",
+    "audio": "same source speech encoded to AAC for both excerpts"
+  },
+  "gif_preview": {
+    "width": 480,
+    "height": 270,
+    "fps": 10,
+    "frames": 179,
+    "duration_seconds": 17.85,
+    "audio": false
+  },
+  "assets_sha256": {
+    "onnimm-context-input.mp4": "553e96d728cf453843aa06f58d81fcba9d3784ad678d7ca2fc7e49339379bf24",
+    "onnimm-context-output.mp4": "2b77224815ec7e7cbb4ffffc55c69cadcafd81bf99f1221de841fbbf067494cf",
+    "onnimm-context-input.gif": "68473679d932070ed7ea37f8a633d61eb38dc94edbb0b7c8d5e3b5c637dc4dbd",
+    "onnimm-context-output.gif": "8f2ab159ae6ea172fa8cce8784f0489fc36d3ff0a7ed8e09b4b55458b071888c",
+    "onnimm-context-poster.jpg": "eb263e3cf58b9b0c1d9dc9384685e8792297ad5372ea63e04fd72e165cb78431"
+  }
+}

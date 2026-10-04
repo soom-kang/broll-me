@@ -1,6 +1,6 @@
 # Pink 비교 샘플 재현하기
 
-[비교 페이지](assets/pink-demo.html)를 열고 **Play both**를 누르세요. 입력과 출력을 함께 재생하고 결과 영상의 오디오만 들려줍니다. GitHub에서는 README의 GIF를 볼 수 있습니다. HTML player는 샘플 폴더를 내려받아 로컬에서 여세요.
+[비교 페이지](assets/pink-demo.html)를 열고 **Play both**를 누르세요. 입력과 출력을 함께 재생하고 결과 영상의 오디오만 들려줍니다. GitHub에서는 [이 샘플의 GIF](assets/pink-demo-comparison.gif)를 볼 수 있습니다. HTML player는 샘플 폴더를 내려받아 로컬에서 여세요.
 
 [English](pink-demo.md) · [한국어](pink-demo.ko.md)
 
@@ -18,7 +18,7 @@
 
 원본과 같은 영상의 SRT에서 문구를 가져왔습니다. 제공된 기존 전체 preview는 구간 선택에 참고했습니다. 새 결과는 `npx skills add`로 설치한 skill을 통해 렌더링했습니다. 기존 출력에서 잘라낸 결과가 아닙니다.
 
-원본 파일은 변경하지 않았습니다. 요청한 구간을 자르고 timestamp를 0으로 맞추기 위해 샘플의 영상과 AAC 오디오를 한 번 인코딩했습니다. Preview는 이 샘플의 오디오 stream을 정규화나 변환 없이 복사했습니다. SRT cue는 구간에 맞춰 자르고 시간을 이동했으며 카드가 나올 때도 발화 자막을 표시합니다. README GIF는 무음이며 가로 1024 px, 10 FPS로 줄였습니다. 원래 샘플 FPS는 MP4에서 확인하세요.
+원본 파일은 변경하지 않았습니다. 요청한 구간을 자르고 timestamp를 0으로 맞추기 위해 샘플의 영상과 AAC 오디오를 한 번 인코딩했습니다. Preview는 이 샘플의 오디오 stream을 정규화나 변환 없이 복사했습니다. SRT cue는 구간에 맞춰 자르고 시간을 이동했으며 카드가 나올 때도 발화 자막을 표시합니다. 샘플 GIF는 무음이며 가로 1024 px, 10 FPS로 줄였습니다. 원래 샘플 FPS는 MP4에서 확인하세요.
 
 ## 샘플 재현하기
 

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>broll-me · Input / Output comparison</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fcfbf8; color: #354135; font: 16px/1.5 system-ui, "Apple SD Gothic Neo", sans-serif; }
+    main { max-width: 1220px; margin: auto; padding: 32px 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 34px); }
+    p { margin: 0 0 20px; }
+    .muted { color: #586758; }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    figure { margin: 0; border: 1px solid #d9d9d2; background: #fff; }
+    figcaption { padding: 10px 14px; font-weight: 700; }
+    video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #354135; }
+    .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0 12px; }
+    button { border: 1px solid #354135; background: #fff; color: #354135; padding: 9px 16px; font: inherit; cursor: pointer; }
+    button.primary { background: #ff8a50; }
+    button:disabled { opacity: .55; cursor: wait; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #b84915; outline-offset: 3px; }
+    input[type="range"] { min-width: 180px; flex: 1; accent-color: #b84915; }
+    output { min-width: 115px; font-variant-numeric: tabular-nums; }
+    #status { min-height: 26px; }
+    a { color: #354135; }
+    .links { border-top: 1px solid #d9d9d2; padding-top: 16px; }
+    @media (max-width: 650px) { main { padding: 20px 14px; } .pair { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>One insert, with its surrounding footage / <span lang="ko">인서트 전후 함께 보기</span></h1>
+  <p class="muted">Both clips cover 01:05.799–01:23.650 (17.851 seconds). The speaker appears before and after the consent-history graphic. / <span lang="ko">두 영상 모두 01:05.799~01:23.650(17.851초)을 보여줍니다. 동의 이력 그래픽 앞뒤로 화자 화면이 이어집니다.</span></p>
+  <div class="pair">
+    <figure><figcaption>Input / 원본</figcaption><video id="input-video" src="onnimm-context-input.mp4" poster="onnimm-context-poster.jpg" muted playsinline preload="metadata" aria-label="Original speaker footage, muted"></video></figure>
+    <figure><figcaption>Output / 적용 결과</figcaption><video id="output-video" src="onnimm-context-output.mp4" poster="onnimm-context-poster.jpg" playsinline preload="metadata" aria-label="Speaker, consent-history B-roll, then speaker; audio on this video only"></video></figure>
+  </div>
+  <div class="controls">
+    <button type="button" id="play" class="primary" disabled>Play both / 함께 재생</button>
+    <button type="button" id="restart" disabled>Restart / 처음으로</button>
+    <input id="seek" type="range" min="0" max="17.851167" step="0.001" value="0" disabled aria-label="Seek both videos / 함께 탐색">
+    <output id="time">0.000 / 17.851 s</output>
+  </div>
+  <p id="status" role="status">Loading both videos / 영상을 불러오는 중입니다.</p>
+  <p class="links"><a href="onnimm-context-input.mp4">Input MP4 / 원본 구간</a> · <a href="onnimm-context-output.mp4">Output MP4 / 적용 구간</a> · <a href="onnimm-context.json">Frame range and hashes / 프레임 범위와 hash</a></p>
+  <p class="muted">Only the output plays sound. The graphic explains the conversation; it is not a product screen or customer record. / <span lang="ko">소리는 적용 결과에서만 나옵니다. 그래픽은 발화 내용의 설명이며 실제 제품 화면이나 고객 기록이 아닙니다.</span></p>
+</main>
+<script>
+  'use strict';
+  const input = document.getElementById('input-video');
+  const output = document.getElementById('output-video');
+  const play = document.getElementById('play');
+  const restart = document.getElementById('restart');
+  const seek = document.getElementById('seek');
+  const time = document.getElementById('time');
+  const status = document.getElementById('status');
+  const expectedDuration = 535 * 1001 / 30000;
+  let failed = false;
+  input.muted = true;
+  input.volume = 0;
+
+  function pauseBoth() {
+    input.pause();
+    output.pause();
+    play.textContent = 'Play both / 함께 재생';
+  }
+  function showTime() {
+    time.textContent = `${output.currentTime.toFixed(3)} / ${expectedDuration.toFixed(3)} s`;
+  }
+  function seekBoth(value) {
+    const target = Math.max(0, Math.min(Number(value), expectedDuration));
+    input.currentTime = target;
+    output.currentTime = target;
+    seek.value = String(target);
+    showTime();
+  }
+  function ready() {
+    if (failed || input.readyState < 1 || output.readyState < 1) return;
+    if (Math.abs(input.duration - expectedDuration) > 0.1 || Math.abs(output.duration - expectedDuration) > 0.1) {
+      failed = true;
+      status.textContent = 'The two clips have different lengths. Keep the matching MP4s beside this page. / 두 영상의 길이가 맞지 않습니다. 이 페이지와 같은 폴더에 해당 MP4를 두세요.';
+      return;
+    }
+    for (const control of [play, restart, seek]) control.disabled = false;
+    status.textContent = 'Press Play both. Output audio only. / 함께 재생을 누르세요. 소리는 오른쪽에서만 나옵니다.';
+  }
+  async function start() {
+    try {
+      if (output.ended || output.currentTime >= expectedDuration - 0.01) seekBoth(0);
+      else input.currentTime = output.currentTime;
+      input.muted = true;
+      await Promise.all([input.play(), output.play()]);
+      play.textContent = 'Pause / 일시 정지';
+      status.textContent = 'Playing together. Output audio only. / 함께 재생 중입니다. 소리는 오른쪽에서만 나옵니다.';
+    } catch (error) {
+      pauseBoth();
+      status.textContent = `Playback failed / 재생 실패: ${error.message}`;
+    }
+  }
+  play.addEventListener('click', () => output.paused ? start() : pauseBoth());
+  restart.addEventListener('click', () => { pauseBoth(); seekBoth(0); });
+  seek.addEventListener('input', () => seekBoth(seek.value));
+  for (const video of [input, output]) {
+    video.addEventListener('loadedmetadata', ready);
+    video.addEventListener('error', () => {
+      failed = true;
+      pauseBoth();
+      for (const control of [play, restart, seek]) control.disabled = true;
+      status.textContent = `Cannot load ${video.getAttribute('src')}. Keep both MP4s beside this HTML. / 영상을 불러오지 못했습니다. 두 MP4를 HTML과 같은 폴더에 두세요.`;
+    });
+  }
+  output.addEventListener('timeupdate', () => { seek.value = String(output.currentTime); showTime(); });
+  output.addEventListener('ended', () => { input.pause(); play.textContent = 'Replay / 다시 재생'; status.textContent = 'Finished. Press Replay. / 재생을 마쳤습니다. 다시 재생을 누르세요.'; });
+  function sync() {
+    if (!output.paused && !input.seeking && Math.abs(input.currentTime - output.currentTime) > 0.08) input.currentTime = output.currentTime;
+    requestAnimationFrame(sync);
+  }
+  requestAnimationFrame(sync);
+  ready();
+</script>
+</body>
+</html>

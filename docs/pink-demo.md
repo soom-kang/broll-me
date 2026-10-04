@@ -1,6 +1,6 @@
 # Reproduce the pink comparison
 
-Open [the comparison page](assets/pink-demo.html), then press **Play both**. It plays the input and output together with audio from the output only. GitHub displays the README GIF; download the sample folder to use the local HTML player.
+Open [the comparison page](assets/pink-demo.html), then press **Play both**. It plays the input and output together with audio from the output only. [This sample's GIF](assets/pink-demo-comparison.gif) shows the comparison on GitHub; download the sample folder to use the local HTML player.
 
 [English](pink-demo.md) · [한국어](pink-demo.ko.md)
 
@@ -18,7 +18,7 @@ The current broll-me skill generated a `card` using `kkumil-pink`. The speaker r
 
 The source and its matching SRT supplied the wording. The existing full-length preview served as a reference for selecting the passage. This new output was rendered through the skill installed by `npx skills add`; it is not a crop of that historical output.
 
-The original video was unchanged. Excerpt preparation encoded video and AAC audio once to cut the requested range and reset timestamps. The preview then copied the excerpt's audio stream without normalizing or transcoding it. SRT cues were clipped and shifted to the excerpt; the card keeps the spoken captions visible. The README GIF is silent, scaled to 1024 pixels wide and sampled at 10 FPS. Use MP4 for the original sample frame rate.
+The original video was unchanged. Excerpt preparation encoded video and AAC audio once to cut the requested range and reset timestamps. The preview then copied the excerpt's audio stream without normalizing or transcoding it. SRT cues were clipped and shifted to the excerpt; the card keeps the spoken captions visible. The sample GIF is silent, scaled to 1024 pixels wide and sampled at 10 FPS. Use MP4 for the original sample frame rate.
 
 ## Reproduce the sample
 

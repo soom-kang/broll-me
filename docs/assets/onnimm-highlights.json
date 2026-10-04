@@ -109,6 +109,25 @@
     "onnimm-highlights-input.mp4": "0dcd94113e354b1d81fc260ecf98926592296a43b87b2378f57d810444057004",
     "onnimm-highlights.gif": "a351f1557593e5670910c50197b1ecd01451defb53cd4137cd19e5ed47c045e6",
     "onnimm-highlights.png": "ccd4b98639915c78d3ee3f68ac917f0a7489fa7000c57ddfcce7233153342b1f",
-    "onnimm-highlights.html": "ee9b0593e608abaf2bebb863cdab1eaf1b1744e6dc220959e52136f061c232b4"
+    "onnimm-highlights.html": "ee9b0593e608abaf2bebb863cdab1eaf1b1744e6dc220959e52136f061c232b4",
+    "onnimm-comparison.gif": "ed3689ce788a5c323908cf483763c3b89bdda82c2e6bb3bc8655f1ba702ff07d",
+    "onnimm-comparison.png": "32e1a079230d4cf3ddaeab06c99af41acf87ffcb7755cb337be9d0f0e3be1a37"
+  },
+  "comparison_gif": {
+    "file": "onnimm-comparison.gif",
+    "left": "input",
+    "right": "output",
+    "hero_ids": [
+      "01-record-recall",
+      "03-treatment-record",
+      "06-scoped-access"
+    ],
+    "fps": 10,
+    "silent": true,
+    "width": 960,
+    "height": 270,
+    "frames": 152,
+    "duration_seconds": 15.25,
+    "bytes": 6640539
   }
 }

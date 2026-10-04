@@ -1,27 +1,32 @@
-[![broll-me 실제 결과 3장면 보기: 지난 시술 기록, 색소·배합·사진, 정보 접근 범위](docs/assets/onnimm-highlights.gif)](docs/assets/onnimm-highlights.html)
-
-[7장면 전체 보기 · 42.509초 MP4](docs/assets/onnimm-highlights.mp4) · [입력·출력 로컬 비교](docs/assets/onnimm-highlights.html) · [정지 이미지](docs/assets/onnimm-highlights.png)
+![broll-me: 같은 모션 그래픽에 여러 팔레트 적용](skills/broll-me/reference/assets/broll-me-title.png)
 
 [English](README.md) · [한국어](README.ko.md)
 
 # broll-me
 
-**broll-me로 제작한 ONNIMM 카페 영상의 실제 결과를 보세요.** GIF에는 **15.249초 분량의 3장면**을 담았습니다. 위 MP4를 열면 **7장면 전체를 42.509초**로 볼 수 있습니다. 해당 구간의 원래 발화도 함께 들립니다.
+## Input / Output 비교
 
-7장면 모두 `onnimm-orange`를 사용했습니다. 그래픽은 대화 내용을 설명하며 실제 제품 화면이나 고객 기록을 보여주지는 않습니다.
+| Input · 원본 영상 | Output · broll-me 적용 결과 |
+| --- | --- |
+| [![입력 프리뷰: 구간 내내 카페에서 말하는 화자](docs/assets/onnimm-context-input.gif)](docs/assets/onnimm-context.html) | [![결과 프리뷰: 같은 화자, 동의 이력 그래픽, 다시 화자](docs/assets/onnimm-context-output.gif)](docs/assets/onnimm-context.html) |
+| [입력 MP4 보기](docs/assets/onnimm-context-input.mp4) | [결과 MP4 보기](docs/assets/onnimm-context-output.mp4) |
+
+두 칸 모두 같은 17.851초를 보여줍니다. 원본에는 카페에서 말하는 화자가 계속 나오고, 적용 결과에는 동의 이력 그래픽이 나온 뒤 다시 화자로 돌아옵니다.
+
+**[비교 페이지](docs/assets/onnimm-context.html)를 로컬에서 열어 두 MP4를 맞춰 보세요.** HTML과 MP4를 같은 폴더에 두면 함께 재생됩니다. 소리는 Output에서만 나옵니다. GitHub의 GIF는 각각 재생되므로 시작이 조금 어긋날 수 있습니다. 적용 결과는 화자 5.005초 → B-roll 7.841초 → 화자 5.005초 순서입니다.
+
+[B-roll 7장면 모두 보기 · 42.509초](docs/assets/onnimm-highlights.html). `onnimm-orange`를 사용한 설명용 그래픽이며 실제 제품 화면이나 고객 기록은 아닙니다.
 
 <details>
-<summary>하이라이트 제작 정보: 영상·시간·오디오</summary>
+<summary>예제 정보: 구간·프레임·오디오</summary>
 
-제공된 완성 preview에서 B-roll 구간만 추출해 자막과 장면 순서를 유지했습니다. GIF는 무음·10 FPS이고, 전체 MP4는 1920×1080과 `30000/1001` FPS를 유지합니다.
+원본의 1972~2506번 프레임(01:05.799~01:23.650)을 사용했습니다. 네 번째 인서트를 포함하며, 두 MP4는 모두 535프레임·1920×1080·`30000/1001` FPS입니다. 두 무음 GIF도 같은 구간을 480×270·10 FPS로 보여줍니다.
 
-발화 구간을 이어 붙이면서 AAC를 한 번 재인코딩했으며 두 원본 파일은 보존했습니다. [추출 frame 범위와 원본 hash](docs/assets/onnimm-highlights.json)를 확인하세요.
+두 영상에는 원본에서 잘라 AAC로 인코딩한 같은 발화를 넣었습니다. 원본 영상과 제공된 preview는 변경하지 않았습니다. [프레임 범위와 hash](docs/assets/onnimm-context.json)를 확인하세요.
 
 </details>
 
 Skill 하나를 설치한 뒤 Codex나 Claude Code에 요청하세요. 제공한 문구로 모션 그래픽 B-roll을 만들고, 원하는 팔레트를 카드, terminal, chart, 투명 panel에 적용합니다.
-
-![broll-me: 같은 모션 그래픽에 여러 팔레트 적용](skills/broll-me/reference/assets/broll-me-title.png)
 
 ## 1. npx로 설치하기
 

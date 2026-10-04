@@ -1,27 +1,32 @@
-[![Watch three broll-me scenes: treatment records, pigment mixtures and photos, and scoped access](docs/assets/onnimm-highlights.gif)](docs/assets/onnimm-highlights.html)
-
-[Watch all 7 scenes · 42.509 s MP4](docs/assets/onnimm-highlights.mp4) · [Compare input / output locally](docs/assets/onnimm-highlights.html) · [Still image](docs/assets/onnimm-highlights.png)
+![broll-me: one motion graphic, several palettes](skills/broll-me/reference/assets/broll-me-title.png)
 
 [English](README.md) · [한국어](README.ko.md)
 
 # broll-me
 
-Watch the actual B-roll made with **broll-me** for the ONNIMM café video. The GIF shows three scenes covering **15.249 seconds** of footage. Open the MP4 above to watch **all 7 scenes in 42.509 seconds**, with the original speech from those sections.
+## Input / Output
 
-All seven scenes use `onnimm-orange`. The graphics illustrate the conversation; they do not show actual product screens or customer records.
+| Input · original footage | Output · broll-me |
+| --- | --- |
+| [![Input preview: the café speaker throughout the passage](docs/assets/onnimm-context-input.gif)](docs/assets/onnimm-context.html) | [![Output preview: the same speaker, then a consent-history graphic, then the speaker again](docs/assets/onnimm-context-output.gif)](docs/assets/onnimm-context.html) |
+| [Watch input MP4](docs/assets/onnimm-context-input.mp4) | [Watch output MP4](docs/assets/onnimm-context-output.mp4) |
+
+Watch the same 17.851-second passage in both columns. On the left, the speaker stays in view. On the right, a consent-history graphic interrupts the café shot before the speaker returns.
+
+**Open [the comparison page](docs/assets/onnimm-context.html) locally to watch both MP4s in sync.** Keep the HTML and MP4s in the same folder; only the Output plays sound. The GIFs run independently on GitHub and may start a moment apart. In the Output, the speaker appears for 5.005 seconds, the B-roll for 7.841 seconds, and the speaker again for 5.005 seconds.
+
+[See all 7 B-roll scenes · 42.509 s](docs/assets/onnimm-highlights.html). They use `onnimm-orange` and explain the conversation; they do not show product screens or customer records.
 
 <details>
-<summary>Highlight details: footage, timing and audio</summary>
+<summary>Example details: range, frames and audio</summary>
 
-We extracted only the B-roll slots from the supplied finished preview, keeping their captions and scene order. The silent GIF runs at 10 FPS; the full montage keeps 1920×1080 and `30000/1001` FPS.
+This comparison uses source frames 1972–2506 (01:05.799–01:23.650), including the fourth insert. Both MP4s have 535 frames at 1920×1080 and `30000/1001` FPS. Each silent GIF uses the same range at 480×270 and 10 FPS.
 
-We re-encoded AAC once to join the selected speech sections and left both original files unchanged. See the [frame ranges and source hashes](docs/assets/onnimm-highlights.json).
+Both excerpts use the same speech from the original video, encoded to AAC for the cut. The source video and supplied preview are unchanged. See the [frame range and hashes](docs/assets/onnimm-context.json).
 
 </details>
 
 Install one skill, then ask Codex or Claude Code to make motion-graphic B-roll from your words. Choose a palette for cards, terminals, charts or transparent panels.
-
-![broll-me: one motion graphic, several palettes](skills/broll-me/reference/assets/broll-me-title.png)
 
 ## 1. Install with npx
 
@@ -61,13 +66,13 @@ Skill installation adds instructions and engine files. Rendering also needs the 
 
 It reuses a runtime you specify. Otherwise it selects `works/.runtime/broll-me/` and sets `BROLL_RUNTIME` before browser checks. A failure in that runtime stops the affected step with its error.
 
-| Component | Required version |
-| --- | --- |
-| Node.js | `24.21.0`, with npm |
-| Python | `3.12.14` |
+| Component        | Required version                            |
+| ---------------- | ------------------------------------------- |
+| Node.js          | `24.21.0`, with npm                         |
+| Python           | `3.12.14`                                   |
 | FFmpeg / FFprobe | `9.0.2`; `libx264` and `prores_ks` encoders |
-| Local modules | Playwright `1.62.1`, NumPy `2.3.5` |
-| Chromium | Revision `1234`, version `151.0.7922.34` |
+| Local modules    | Playwright `1.62.1`, NumPy `2.3.5`          |
+| Chromium         | Revision `1234`, version `151.0.7922.34`    |
 
 ## 3. Copy a prompt
 
@@ -114,13 +119,13 @@ SRT/VTT word timing is an estimate. Check it against playback. If text clips, sh
 
 Expect these files under `outputs/<task>/` for source-video inserts:
 
-| Output | Use |
-| --- | --- |
-| MP4 clips / alpha MOV panels | Insert them in your editor; put transparent panels above the video |
-| `preview.mp4` | Watch the inserts against the supplied footage |
-| `viewer.html`, `compare.html` | Review individual clips and compare with the source |
-| `TIMING.md` | Check each clip's insertion time and quoted speech |
-| Scene HTML and `palette.resolved.json` | Edit the scene and inspect its resolved colors |
+| Output                                 | Use                                                                |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| MP4 clips / alpha MOV panels           | Insert them in your editor; put transparent panels above the video |
+| `preview.mp4`                          | Watch the inserts against the supplied footage                     |
+| `viewer.html`, `compare.html`          | Review individual clips and compare with the source                |
+| `TIMING.md`                            | Check each clip's insertion time and quoted speech                 |
+| Scene HTML and `palette.resolved.json` | Edit the scene and inspect its resolved colors                     |
 
 Scene HTML travels with its palette snapshot, shared `assets/broll-me-fonts/` folder and required local assets. The agent checks that final references do not depend on `works/`; `compare.html` may still reference the original in `inputs/`. It reports unresolved custom resources before claiming delivery complete. Select `--font-mode embedded` when you need one HTML file. Previews copy the input audio stream; unsupported source timing or MP4-incompatible audio causes an explicit failure. The skill does not normalize or transcode source audio as a fallback.
 
@@ -138,14 +143,14 @@ Follow the [English workflow](skills/broll-me/reference/workflow.md) or [한국�
 
 Use one preset, or supply custom JSON with all 13 color roles. Choose either `--palette` or `--palette-file`; see [palette templates](skills/broll-me/reference/palettes.md).
 
-| Preset | Canvas | Accent |
-| --- | --- | --- |
+| Preset                  | Canvas    | Accent    |
+| ----------------------- | --------- | --------- |
 | `warm-orange` (default) | `#E9E7E2` | `#FF5A1F` |
-| `sage-cream` | `#F4F1E8` | `#5E7D64` |
-| `editorial-blue` | `#F3F6FA` | `#2F5BEA` |
-| `midnight-cyan` | `#111827` | `#67E8F9` |
-| `kkumil-pink` | `#FFF0E6` | `#FF5C8D` |
-| `onnimm-orange` | `#FCFBF8` | `#FF8A50` |
+| `sage-cream`            | `#F4F1E8` | `#5E7D64` |
+| `editorial-blue`        | `#F3F6FA` | `#2F5BEA` |
+| `midnight-cyan`         | `#111827` | `#67E8F9` |
+| `kkumil-pink`           | `#FFF0E6` | `#FF5C8D` |
+| `onnimm-orange`         | `#FCFBF8` | `#FF8A50` |
 
 Palette changes affect the generated graphic while preserving its content, geometry, motion and timing. Source grading, photorealistic generation and final master editing remain outside the skill's scope.
 
