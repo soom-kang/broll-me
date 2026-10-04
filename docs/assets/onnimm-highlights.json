@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "palette": "onnimm-orange",
+  "fps": "30000/1001",
+  "width": 1920,
+  "height": 1080,
+  "frames": 1274,
+  "duration_seconds": 42.50913333333333,
+  "hero_ids": [
+    "01-record-recall",
+    "03-treatment-record",
+    "06-scoped-access"
+  ],
+  "hero_frames": 457,
+  "hero_source_duration_seconds": 15.248566666666667,
+  "gif": {
+    "width": 960,
+    "fps": 10,
+    "silent": true,
+    "bytes": 1437431,
+    "duration_seconds": 15.25,
+    "frames": 152
+  },
+  "source_sha256": {
+    "onnimm-cafe-final.mp4": "2154b459ecb97231567bec25f73d3c1c75584d7dcb9c9b07bf52de680cbe5a2d",
+    "preview.mp4": "30a3a47fbf75c618c0e2ec928d2ae01c4dbe672431e44f49666eb9e9a7158f25"
+  },
+  "clips": [
+    {
+      "id": "01-record-recall",
+      "title": "지난 시술 기록",
+      "source_start_frame": 909,
+      "source_end_frame_exclusive": 1067,
+      "frames": 158,
+      "montage_start_frame": 0,
+      "montage_end_frame_exclusive": 158,
+      "hero": true
+    },
+    {
+      "id": "02-structured-notes",
+      "title": "메모 세분화",
+      "source_start_frame": 1469,
+      "source_end_frame_exclusive": 1589,
+      "frames": 120,
+      "montage_start_frame": 158,
+      "montage_end_frame_exclusive": 278,
+      "hero": false
+    },
+    {
+      "id": "03-treatment-record",
+      "title": "시술 기록 모으기",
+      "source_start_frame": 1665,
+      "source_end_frame_exclusive": 1790,
+      "frames": 125,
+      "montage_start_frame": 278,
+      "montage_end_frame_exclusive": 403,
+      "hero": true
+    },
+    {
+      "id": "04-consent-history",
+      "title": "동의 이력",
+      "source_start_frame": 2122,
+      "source_end_frame_exclusive": 2357,
+      "frames": 235,
+      "montage_start_frame": 403,
+      "montage_end_frame_exclusive": 638,
+      "hero": false
+    },
+    {
+      "id": "05-tailored-guidance",
+      "title": "고객별 안내",
+      "source_start_frame": 2846,
+      "source_end_frame_exclusive": 3090,
+      "frames": 244,
+      "montage_start_frame": 638,
+      "montage_end_frame_exclusive": 882,
+      "hero": false
+    },
+    {
+      "id": "06-scoped-access",
+      "title": "정보 접근 범위",
+      "source_start_frame": 3491,
+      "source_end_frame_exclusive": 3665,
+      "frames": 174,
+      "montage_start_frame": 882,
+      "montage_end_frame_exclusive": 1056,
+      "hero": true
+    },
+    {
+      "id": "07-previsit-preparation",
+      "title": "방문 전 준비",
+      "source_start_frame": 3753,
+      "source_end_frame_exclusive": 3971,
+      "frames": 218,
+      "montage_start_frame": 1056,
+      "montage_end_frame_exclusive": 1274,
+      "hero": false
+    }
+  ],
+  "audio": "Speech trimmed from each supplied video, concatenated and re-encoded once to AAC; no added audio.",
+  "notes": [
+    "Extracted from the supplied broll-me preview; no new scenes rendered.",
+    "Only the seven B-roll slots are included, in their original order.",
+    "Illustrative graphics, not actual product screens or customer records.",
+    "GIF reduces frame rate; MP4 preserves 30000/1001 FPS."
+  ],
+  "asset_sha256": {
+    "onnimm-highlights.mp4": "574f31ae4a8a1caa0ed705fbdfc7d32225261d8af78f9f1da2340c5b9f8b7792",
+    "onnimm-highlights-input.mp4": "0dcd94113e354b1d81fc260ecf98926592296a43b87b2378f57d810444057004",
+    "onnimm-highlights.gif": "a351f1557593e5670910c50197b1ecd01451defb53cd4137cd19e5ed47c045e6",
+    "onnimm-highlights.png": "ccd4b98639915c78d3ee3f68ac917f0a7489fa7000c57ddfcce7233153342b1f",
+    "onnimm-highlights.html": "ee9b0593e608abaf2bebb863cdab1eaf1b1744e6dc220959e52136f061c232b4"
+  }
+}

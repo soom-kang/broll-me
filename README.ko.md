@@ -1,14 +1,25 @@
-[![입력 영상과 broll-me pink 카드 결과 비교](docs/assets/pink-demo-comparison.gif)](docs/assets/pink-demo.html)
+[![broll-me 실제 결과 3장면 보기: 지난 시술 기록, 색소·배합·사진, 정보 접근 범위](docs/assets/onnimm-highlights.gif)](docs/assets/onnimm-highlights.html)
 
-[로컬에서 비교 재생](docs/assets/pink-demo.html) · [입력 MP4](docs/assets/pink-demo-input.mp4) · [결과 MP4](docs/assets/pink-demo-output.mp4) · [정지 이미지](docs/assets/pink-demo-comparison.png)
+[7장면 전체 보기 · 42.509초 MP4](docs/assets/onnimm-highlights.mp4) · [입력·출력 로컬 비교](docs/assets/onnimm-highlights.html) · [정지 이미지](docs/assets/onnimm-highlights.png)
 
 [English](README.md) · [한국어](README.ko.md)
 
 # broll-me
 
-Skill 하나를 설치한 뒤 Codex나 Claude Code에 요청하세요. 제공한 문구로 모션 그래픽 B-roll을 만들고, 원하는 팔레트를 카드, terminal, chart, 투명 panel에 적용합니다.
+**broll-me로 제작한 ONNIMM 카페 영상의 실제 결과를 보세요.** GIF에는 **15.249초 분량의 3장면**을 담았습니다. 위 MP4를 열면 **7장면 전체를 42.509초**로 볼 수 있습니다. 해당 구간의 원래 발화도 함께 들립니다.
 
-위 비교는 **6.607초 길이의 입력**에 현재 `card` template과 `kkumil-pink`를 적용한 결과입니다. 처음 2.436초는 화자를 보여주고, 이후에는 색소 배합과 시술 사진을 설명하는 pink cutaway를 넣었습니다. 그래픽은 설명용이며 실제 제품 화면이나 고객 기록이 아닙니다. [샘플 제작 정보](docs/pink-demo.ko.md)를 확인하세요.
+7장면 모두 `onnimm-orange`를 사용했습니다. 그래픽은 대화 내용을 설명하며 실제 제품 화면이나 고객 기록을 보여주지는 않습니다.
+
+<details>
+<summary>하이라이트 제작 정보: 영상·시간·오디오</summary>
+
+제공된 완성 preview에서 B-roll 구간만 추출해 자막과 장면 순서를 유지했습니다. GIF는 무음·10 FPS이고, 전체 MP4는 1920×1080과 `30000/1001` FPS를 유지합니다.
+
+발화 구간을 이어 붙이면서 AAC를 한 번 재인코딩했으며 두 원본 파일은 보존했습니다. [추출 frame 범위와 원본 hash](docs/assets/onnimm-highlights.json)를 확인하세요.
+
+</details>
+
+Skill 하나를 설치한 뒤 Codex나 Claude Code에 요청하세요. 제공한 문구로 모션 그래픽 B-roll을 만들고, 원하는 팔레트를 카드, terminal, chart, 투명 panel에 적용합니다.
 
 ![broll-me: 같은 모션 그래픽에 여러 팔레트 적용](skills/broll-me/reference/assets/broll-me-title.png)
 
@@ -64,12 +75,12 @@ Skill 설치로 지침과 엔진 파일을 받습니다. 렌더링에는 아래 
 
 ```text
 $broll-me를 사용해 inputs/source.mp4와 같은 영상의 inputs/source.srt를 읽어 주세요.
-inputs/notes.json이 있으면 함께 참고해 주세요. kkumil-pink 팔레트로
-색소 배합과 시술 사진을 설명하는 card cutaway를 만들어 주세요.
-도입부의 화자는 그대로 보여 주세요. 자막에서 짧은 삽입 구간을 제안한 뒤
+inputs/notes.json이 있으면 함께 참고해 주세요. onnimm-orange 팔레트로
+시술 기록, 동의 이력, 정보 접근 범위를 설명하는 짧은 B-roll cutaway를 만들어 주세요.
+삽입 구간 사이에는 화자를 보여 주세요. 자막에서 문구와 삽입 구간을 제안한 뒤
 draft를 보여 주세요. 원본을 보존하고 preview에는 원본 오디오를 복사해 주세요.
 최종 clip, preview.mp4, viewer.html, compare.html, TIMING.md를
-outputs/palette-card에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
+outputs/onnimm-cafe-broll에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
 ```
 
 **Claude Code**에서는 같은 요청을 `/broll-me`로 시작하세요.
@@ -77,15 +88,15 @@ outputs/palette-card에 저장해 이 로컬 작업 공간에서 확인할 수 �
 ```text
 /broll-me
 inputs/source.mp4와 같은 영상의 inputs/source.srt를 읽어 주세요.
-inputs/notes.json이 있으면 함께 참고해 주세요. kkumil-pink 팔레트로
-색소 배합과 시술 사진을 설명하는 card cutaway를 만들어 주세요.
-도입부의 화자는 그대로 보여 주세요. 자막에서 짧은 삽입 구간을 제안한 뒤
+inputs/notes.json이 있으면 함께 참고해 주세요. onnimm-orange 팔레트로
+시술 기록, 동의 이력, 정보 접근 범위를 설명하는 짧은 B-roll cutaway를 만들어 주세요.
+삽입 구간 사이에는 화자를 보여 주세요. 자막에서 문구와 삽입 구간을 제안한 뒤
 draft를 보여 주세요. 원본을 보존하고 preview에는 원본 오디오를 복사해 주세요.
 최종 clip, preview.mp4, viewer.html, compare.html, TIMING.md를
-outputs/palette-card에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
+outputs/onnimm-cafe-broll에 저장해 이 로컬 작업 공간에서 확인할 수 있게 해 주세요.
 ```
 
-내용과 파일 경로를 자신의 작업에 맞게 바꾸세요. 문서 상단의 비교를 재현하려면 준비된 샘플과 [샘플 재현 프롬프트](docs/pink-demo.ko.md#샘플-재현하기)를 사용하세요. 참고로 제공된 기존 전체 preview를 현재 broll-me 결과로 표시하지 않습니다.
+내용과 파일 경로를 자신의 작업에 맞게 바꾸세요. 위 프롬프트는 orange 사례와 같은 작업 흐름을 따릅니다. 다른 팔레트를 써 보려면 [pink 카드 예제와 재현 프롬프트](docs/pink-demo.ko.md#샘플-재현하기)를 확인하세요.
 
 Standalone은 이렇게 요청하세요. `$broll-me로 kkumil-pink 팔레트의 6초 한글 card를 만들어 주세요. 제목: 지난 시술 기록을 한눈에. 본문: 색소 배합, 시술 사진.` Claude Code에서는 호출만 `/broll-me`로 바꾸세요.
 
@@ -140,6 +151,6 @@ Preset 하나를 고르거나 13개 색상 역할을 모두 담은 custom JSON�
 
 Checkout에서 `make check`, `python3 scripts/package.py`를 실행하세요. [Skill archive](dist/broll-me.skill), [ZIP](dist/broll-me.zip), [hash manifest](dist/package-manifest.json)에 설치 가능한 skill을 담습니다. 샘플 영상, runtime, 평가 기록, 비공개 artwork는 archive에 넣지 않습니다.
 
-새 샘플로 로컬 설치와 렌더링을 확인합니다. 기존 host 평가는 별도로 유지합니다. Claude Code는 fixture 요청 2건을 완료했고, Codex는 Chromium 권한 오류로 중단되어 품질 점수를 받지 않았습니다. [Host 실행 근거](reports/ENGINE_IMPROVEMENTS.md)를 참고하세요. 사용자 재생 승인은 별도로 확인해야 합니다.
+이전에 수행한 로컬 설치와 샘플 렌더링은 [검증 기록](reports/NPX_DOCUMENTATION.md)에서 확인하세요. 문서 상단의 사례는 제공된 broll-me 제작 preview에서 추출했습니다. 기존 host 평가는 별도로 유지합니다. Claude Code는 fixture 요청 2건을 완료했고, Codex는 Chromium 권한 오류로 중단되어 품질 점수를 받지 않았습니다. [Host 실행 근거](reports/ENGINE_IMPROVEMENTS.md)를 참고하세요. 사용자 재생 승인은 별도로 확인해야 합니다.
 
 재배포할 때는 [MIT license](skills/broll-me/LICENSE)와 [font 및 icon 고지](skills/broll-me/THIRD_PARTY_NOTICES.md)를 유지하세요. Workflow는 [HyperFrames의 motion-graphics skill](https://github.com/heygen-com/hyperframes/blob/main/skills/motion-graphics/SKILL.md)에서 영감을 받았습니다. Workflow 참고이며 엔진 코드 출처를 뜻하지 않습니다.

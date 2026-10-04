@@ -1,14 +1,25 @@
-[![Input footage beside the broll-me pink card output](docs/assets/pink-demo-comparison.gif)](docs/assets/pink-demo.html)
+[![Watch three broll-me scenes: treatment records, pigment mixtures and photos, and scoped access](docs/assets/onnimm-highlights.gif)](docs/assets/onnimm-highlights.html)
 
-[Play the comparison locally](docs/assets/pink-demo.html) · [Input MP4](docs/assets/pink-demo-input.mp4) · [Output MP4](docs/assets/pink-demo-output.mp4) · [Still image](docs/assets/pink-demo-comparison.png)
+[Watch all 7 scenes · 42.509 s MP4](docs/assets/onnimm-highlights.mp4) · [Compare input / output locally](docs/assets/onnimm-highlights.html) · [Still image](docs/assets/onnimm-highlights.png)
 
 [English](README.md) · [한국어](README.ko.md)
 
 # broll-me
 
-Install one skill, then ask Codex or Claude Code to turn supplied words into motion-graphic B-roll. Choose a palette for cards, terminals, charts or transparent panels.
+Watch the actual B-roll made with **broll-me** for the ONNIMM café video. The GIF shows three scenes covering **15.249 seconds** of footage. Open the MP4 above to watch **all 7 scenes in 42.509 seconds**, with the original speech from those sections.
 
-The comparison above uses a **6.607-second excerpt** and the current `card` template with `kkumil-pink`. The speaker remains visible for the first 2.436 seconds; a pink cutaway then illustrates the spoken point about pigment mixtures and treatment photos. The graphic represents an idea, not a product screen or customer record. See [sample details](docs/pink-demo.md).
+All seven scenes use `onnimm-orange`. The graphics illustrate the conversation; they do not show actual product screens or customer records.
+
+<details>
+<summary>Highlight details: footage, timing and audio</summary>
+
+We extracted only the B-roll slots from the supplied finished preview, keeping their captions and scene order. The silent GIF runs at 10 FPS; the full montage keeps 1920×1080 and `30000/1001` FPS.
+
+We re-encoded AAC once to join the selected speech sections and left both original files unchanged. See the [frame ranges and source hashes](docs/assets/onnimm-highlights.json).
+
+</details>
+
+Install one skill, then ask Codex or Claude Code to make motion-graphic B-roll from your words. Choose a palette for cards, terminals, charts or transparent panels.
 
 ![broll-me: one motion graphic, several palettes](skills/broll-me/reference/assets/broll-me-title.png)
 
@@ -64,12 +75,13 @@ In **Codex**, use `$broll-me`:
 
 ```text
 Use $broll-me with inputs/source.mp4 and its matching inputs/source.srt.
-Read inputs/notes.json if it exists. Use the kkumil-pink palette and a card
-cutaway about pigment mixtures and treatment photos. Keep the opening
-speaker footage visible. Propose a short insertion slot from the subtitles,
-then show a draft. Preserve the source and copy its audio into the preview.
+Read inputs/notes.json if it exists. Use the onnimm-orange palette for short
+B-roll cutaways about treatment records, consent history and access scopes.
+Keep the speaker visible between inserts. Propose the wording and insertion
+slots from the subtitles, then show a draft. Preserve the source and copy
+its audio into the preview.
 Deliver final clips, preview.mp4, viewer.html, compare.html and TIMING.md
-under outputs/palette-card so I can review them in this local workspace.
+under outputs/onnimm-cafe-broll so I can review them in this local workspace.
 ```
 
 In **Claude Code**, use `/broll-me` with the same request:
@@ -77,15 +89,16 @@ In **Claude Code**, use `/broll-me` with the same request:
 ```text
 /broll-me
 Use inputs/source.mp4 and its matching inputs/source.srt.
-Read inputs/notes.json if it exists. Use the kkumil-pink palette and a card
-cutaway about pigment mixtures and treatment photos. Keep the opening
-speaker footage visible. Propose a short insertion slot from the subtitles,
-then show a draft. Preserve the source and copy its audio into the preview.
+Read inputs/notes.json if it exists. Use the onnimm-orange palette for short
+B-roll cutaways about treatment records, consent history and access scopes.
+Keep the speaker visible between inserts. Propose the wording and insertion
+slots from the subtitles, then show a draft. Preserve the source and copy
+its audio into the preview.
 Deliver final clips, preview.mp4, viewer.html, compare.html and TIMING.md
-under outputs/palette-card so I can review them in this local workspace.
+under outputs/onnimm-cafe-broll so I can review them in this local workspace.
 ```
 
-Replace the subject and paths with your own. To reproduce the comparison at the top, use the prepared sample and [exact sample prompt](docs/pink-demo.md#reproduce-the-sample). The existing full-length preview supplied as a reference is not presented as a current broll-me result.
+Replace the subject and paths with your own. The prompt follows the orange showcase's workflow. For another palette, try the [pink card example and reproduction prompt](docs/pink-demo.md#reproduce-the-sample).
 
 For a standalone clip, ask: `Use $broll-me to make a 6-second Korean card with kkumil-pink. Title: 지난 시술 기록을 한눈에. Body: 색소 배합, 시술 사진.` In Claude Code, replace the invocation with `/broll-me`.
 
@@ -140,6 +153,6 @@ Palette changes affect the generated graphic while preserving its content, geome
 
 From this checkout, run `make check`, then `python3 scripts/package.py`. The [skill archive](dist/broll-me.skill), [ZIP](dist/broll-me.zip) and [hash manifest](dist/package-manifest.json) contain the installable skill. Demo footage, runtime files, evaluation records and private artwork stay outside those archives.
 
-The new sample validates local installation and rendering. Earlier host evaluations remain separate: Claude Code completed two fixture requests; Codex stopped at Chromium permission errors and received no quality score. See [host evidence](reports/ENGINE_IMPROVEMENTS.md). Human playback approval remains a separate check.
+See the [local installation and sample-render checks](reports/NPX_DOCUMENTATION.md) for earlier verification. The showcase above comes from a supplied broll-me production preview. Earlier host evaluations remain separate: Claude Code completed two fixture requests; Codex stopped at Chromium permission errors and received no quality score. See [host evidence](reports/ENGINE_IMPROVEMENTS.md). Human playback approval remains a separate check.
 
 Keep the [MIT license](skills/broll-me/LICENSE) and [font and icon notices](skills/broll-me/THIRD_PARTY_NOTICES.md) with redistributed copies. The workflow draws inspiration from [HyperFrames' motion-graphics skill](https://github.com/heygen-com/hyperframes/blob/main/skills/motion-graphics/SKILL.md); this identifies a workflow reference, not an engine code source.
