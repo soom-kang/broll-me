@@ -16,14 +16,14 @@
 
 ## 1. Skill 하나 설치하기
 
-작업할 프로젝트에서 `v0.8.0-beta.1` 릴리즈를 설치하세요.
+작업할 프로젝트에서 `v0.8.0-beta.2` 릴리즈를 설치하세요.
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
 npx skills list --agent codex claude-code
 ```
 
-이 명령은 베타 태그를 선택합니다. 배포물과 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
+이 명령은 베타 태그를 선택합니다. 배포물과 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
 
 ```bash
 npx skills add /path/to/broll-me --skill broll-me --agent codex claude-code
@@ -112,7 +112,7 @@ Draft와 주요 frame을 여세요. 한글 가독성, 대비, cutaway timing, �
 
 Draft는 frame당 한 번 캡처하며 motion blur를 생략합니다. Final은 4개 subframe에 motion blur를 적용합니다. 크기, FPS, frame 수, container, alpha 동작은 같습니다. Draft는 검토용이므로 전달할 결과에는 final 렌더링을 요청하세요.
 
-`check`는 scene 계약, 표본 시점의 browser 오류, template text overflow를 검사합니다. 재생 확인도 필요합니다. 글자가 잘리면 문구를 줄이거나 장면을 나눈 뒤 다시 build하세요. Browser나 encoder 오류는 CLI JSON과 stderr에서 확인하고 원인을 고친 뒤 해당 단계만 재실행하세요. 이전 결과는 보존합니다.
+`check`는 scene 계약, 표본 시점의 browser 오류, resource 요청 실패, template text overflow를 검사합니다. 재생 확인도 필요합니다. 글자가 잘리면 문구를 줄이거나 장면을 나눈 뒤 다시 build하세요. Browser나 encoder 오류는 CLI JSON과 stderr에서 확인하고 원인을 고친 뒤 해당 단계만 재실행하세요. 이전 결과는 보존합니다.
 
 ## 5. 최종 파일 받기
 
@@ -225,7 +225,7 @@ python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview \
   works/palette-card/plan.json outputs/palette-card/preview.mp4
 ```
 
-Preview, HTML 검토 페이지, timing 문서, shared font가 생성됩니다. 파일 누락, clip 겹침, 범위를 벗어난 시간은 실패합니다. Plan을 고치고 다시 실행하세요. 오디오나 encoder 오류는 [Media 복구](troubleshooting.md#media-and-delivery)를 참고하세요.
+CLI는 preview, HTML 검토 페이지, timing 문서, shared font를 임시 폴더에서 완성한 뒤 파일별로 전달합니다. 파일 누락, clip 겹침, 범위를 벗어난 시간은 실패합니다. Plan을 고친 뒤 다시 실행하세요. 파일 전달에 실패하면 이전 파일의 복구 여부를 확인하세요. 오류에 recovery 파일 보존 경로가 표시되면 해당 폴더를 보존하고 복구를 마칠 때까지 재실행을 중단하세요. 파일 전달, 오디오, encoder 오류는 [Media 복구](troubleshooting.md#media-and-delivery)를 참고하세요.
 
 ## 고급: archive와 개발용 설치
 

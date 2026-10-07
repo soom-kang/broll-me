@@ -30,13 +30,13 @@ Skill 하나를 설치한 뒤 Codex나 Claude Code에 요청하세요. 제공한
 
 ## 1. npx로 설치하기
 
-Skill을 사용할 프로젝트에서 terminal을 여세요. [Skills CLI](https://github.com/vercel-labs/skills#install-a-skill)로 `v0.8.0-beta.1` 릴리즈를 설치합니다.
+Skill을 사용할 프로젝트에서 terminal을 여세요. [Skills CLI](https://github.com/vercel-labs/skills#install-a-skill)로 `v0.8.0-beta.2` 릴리즈를 설치합니다.
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
 ```
 
-이 명령은 베타 태그를 선택합니다. 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
+이 명령은 베타 태그를 선택합니다. 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
 
 ```bash
 # Replace this path with your checkout or extracted package folder.
@@ -125,6 +125,8 @@ SRT/VTT에서 나눈 word timing은 추정치이므로 재생하며 확인하세
 | `TIMING.md` | clip의 삽입 시간과 인용한 발화를 확인합니다 |
 | Scene HTML, `palette.resolved.json` | 장면을 수정하고 확정된 색상을 확인합니다 |
 
+Preview와 검토 파일을 임시 폴더에서 완성한 뒤 전달합니다. 파일 전달에 실패하면 다시 실행하기 전에 [복구 안내](skills/broll-me/reference/troubleshooting.md#media-and-delivery)를 확인하세요.
+
 Scene HTML은 팔레트 snapshot, shared `assets/broll-me-fonts/` 폴더, 필요한 local assets와 함께 전달합니다. Agent는 최종 참조가 `works/`에 의존하지 않는지 확인합니다. `compare.html`은 `inputs/`의 원본을 참조할 수 있습니다. 확인하지 못한 custom resource가 있으면 전달 완료로 보고하지 않습니다. HTML 하나로 전달하려면 `--font-mode embedded`를 선택하세요. Preview는 입력 오디오 stream을 복사합니다. 지원하지 않는 원본 timing이나 MP4와 호환되지 않는 오디오는 명확한 오류로 끝납니다. Skill은 복구 과정에서 원본 오디오를 임의로 정규화하거나 변환하지 않습니다.
 
 Setup, 수동 CLI, 팔레트 변경, archive 설치는 [한국어 사용 가이드](skills/broll-me/reference/workflow.ko.md)나 [English workflow](skills/broll-me/reference/workflow.md)를 참고하세요.
@@ -154,7 +156,7 @@ Preset 하나를 고르거나 13개 색상 역할을 모두 담은 custom JSON�
 
 ## 유지보수 검사
 
-Checkout에서 `make check`, `python3 scripts/package.py`를 실행하면 `dist/`에 로컬 배포물을 생성합니다. 릴리즈된 [Skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.zip), [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/package-manifest.json)는 GitHub Release assets에서 내려받으세요. 샘플 영상, runtime, 평가 기록, 비공개 artwork는 archive에 넣지 않습니다.
+Checkout에서 `make check`, `python3 scripts/package.py`를 실행하면 `dist/`에 로컬 배포물을 생성합니다. 릴리즈된 [Skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/broll-me.zip), [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/package-manifest.json)는 GitHub Release assets에서 내려받으세요. 샘플 영상, runtime, 평가 기록, 비공개 artwork는 archive에 넣지 않습니다.
 
 이전에 수행한 로컬 설치와 샘플 렌더링은 [검증 기록](reports/NPX_DOCUMENTATION.md)에서 확인하세요. 문서 상단의 사례는 제공된 broll-me 제작 preview에서 추출했습니다. 기존 host 평가는 별도로 유지합니다. Claude Code는 fixture 요청 2건을 완료했고, Codex는 Chromium 권한 오류로 중단되어 품질 점수를 받지 않았습니다. [Host 실행 근거](reports/ENGINE_IMPROVEMENTS.md)를 참고하세요. 사용자 재생 승인은 별도로 확인해야 합니다.
 

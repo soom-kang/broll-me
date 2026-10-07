@@ -2,7 +2,7 @@
 
 A clip is a small HTML fragment in `works/<task>/clips/NN-name.html`. Build it through `broll.py build` or the existing `engine/build.py`. The common CLI uses shared local fonts; direct build calls retain embedded fonts by default. In either mode, `seek(t)` draws the frame at time `t`. Every style is a pure function of `t`: no CSS transitions, no timers, no state carried between frames. That is what makes frame-by-frame rendering with motion blur possible. For standard cards, terminals, charts and panels, start with [SceneSpec templates](scenes.md).
 
-`M.scene` validates state references, positive geometry, ordered in-range timing, layer element references and cursor input before changing the DOM. Custom callbacks and authored colors remain available. `broll.py check` then seeks the scene's key times and checks visible template text marked with `data-broll-text` for overflow. It reports sampled times when a scene has more than 64 distinct check times; visual review is still required.
+`M.scene` validates state references, positive geometry, ordered in-range timing, layer element references and cursor input before changing the DOM. Custom callbacks and authored colors remain available. `broll.py check` then seeks the scene's key times and checks visible template text marked with `data-broll-text` for overflow. Failed resource requests also stop the check, including missing local assets and blocked network URLs. Browser resources must use `file:`, `data:` or `about:` URLs. It reports sampled times when a scene has more than 64 distinct check times; visual review is still required.
 
 ## Fragment skeleton
 

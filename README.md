@@ -30,13 +30,13 @@ Install one skill, then ask Codex or Claude Code to make motion-graphic B-roll f
 
 ## 1. Install with npx
 
-Open a terminal in the project where you will use the skill. Install the `v0.8.0-beta.1` release with the [skills CLI](https://github.com/vercel-labs/skills#install-a-skill):
+Open a terminal in the project where you will use the skill. Install the `v0.8.0-beta.2` release with the [skills CLI](https://github.com/vercel-labs/skills#install-a-skill):
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
 ```
 
-This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1) for the verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
+This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2) for the verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
 
 ```bash
 # Replace this path with your checkout or extracted package folder.
@@ -127,6 +127,8 @@ Expect these files under `outputs/<task>/` for source-video inserts:
 | `TIMING.md`                            | Check each clip's insertion time and quoted speech                 |
 | Scene HTML and `palette.resolved.json` | Edit the scene and inspect its resolved colors                     |
 
+Preview and review files are completed in a temporary folder before delivery. If publication fails, follow the [recovery instructions](skills/broll-me/reference/troubleshooting.md#media-and-delivery) before retrying.
+
 Scene HTML travels with its palette snapshot, shared `assets/broll-me-fonts/` folder and required local assets. The agent checks that final references do not depend on `works/`; `compare.html` may still reference the original in `inputs/`. It reports unresolved custom resources before claiming delivery complete. Select `--font-mode embedded` when you need one HTML file. Previews copy the input audio stream; unsupported source timing or MP4-incompatible audio causes an explicit failure. The skill does not normalize or transcode source audio as a fallback.
 
 Follow the [English workflow](skills/broll-me/reference/workflow.md) or [한국어 사용 가이드](skills/broll-me/reference/workflow.ko.md) for setup, manual CLI commands, palette changes and archive installation.
@@ -156,7 +158,7 @@ Palette changes affect the generated graphic while preserving its content, geome
 
 ## Maintainer checks
 
-From this checkout, run `make check`, then `python3 scripts/package.py` to generate local artifacts under `dist/`. Download the released [skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/broll-me.zip) and [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.1/package-manifest.json) from GitHub Release assets. Demo footage, runtime files, evaluation records and private artwork stay outside those archives.
+From this checkout, run `make check`, then `python3 scripts/package.py` to generate local artifacts under `dist/`. Download the released [skill archive](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/broll-me.skill), [ZIP](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/broll-me.zip) and [hash manifest](https://github.com/soom-kang/broll-me/releases/download/v0.8.0-beta.2/package-manifest.json) from GitHub Release assets. Demo footage, runtime files, evaluation records and private artwork stay outside those archives.
 
 See the [local installation and sample-render checks](reports/NPX_DOCUMENTATION.md) for earlier verification. The showcase above comes from a supplied broll-me production preview. Earlier host evaluations remain separate: Claude Code completed two fixture requests; Codex stopped at Chromium permission errors and received no quality score. See [host evidence](reports/ENGINE_IMPROVEMENTS.md). Human playback approval remains a separate check.
 

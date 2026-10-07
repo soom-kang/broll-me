@@ -16,14 +16,14 @@ Edit the [diagram HTML](assets/workflow-en.html).
 
 ## 1. Install one skill
 
-Install the `v0.8.0-beta.1` release from your working project:
+Install the `v0.8.0-beta.2` release from your working project:
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.1 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
 npx skills list --agent codex claude-code
 ```
 
-This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.1) for archives and verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
+This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2) for archives and verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
 
 ```bash
 npx skills add /path/to/broll-me --skill broll-me --agent codex claude-code
@@ -112,7 +112,7 @@ Open the draft and key frames. Check readable Korean text, contrast, cutaway tim
 
 Draft captures one image per frame without motion blur. Final captures four subframes with motion blur. Dimensions, FPS, frame count, container and alpha behavior stay the same. A draft is review media; request final rendering for delivery.
 
-`check` validates scene contracts, sampled browser errors and template text overflow. Playback still matters. On clipped text, shorten it or split the scene before rebuilding. On a browser or encoder error, inspect the CLI JSON and stderr, fix the cause and retry only the affected step. Keep previous outputs.
+`check` validates scene contracts, sampled browser errors, failed resource requests and template text overflow. Playback still matters. On clipped text, shorten it or split the scene before rebuilding. On a browser or encoder error, inspect the CLI JSON and stderr, fix the cause and retry only the affected step. Keep previous outputs.
 
 ## 5. Receive final files
 
@@ -225,7 +225,7 @@ python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview \
   works/palette-card/plan.json outputs/palette-card/preview.mp4
 ```
 
-Expect the preview, HTML review pages, timing file and shared fonts. Missing files, overlapping clips or out-of-range timing fail; correct the plan and retry. Read [media recovery](troubleshooting.md#media-and-delivery) for audio or encoder failures.
+The CLI completes the preview, HTML review pages, timing file and shared fonts in a temporary folder, then publishes them file by file. Missing files, overlapping clips or out-of-range timing fail; correct the plan before retrying. If publication fails, check whether prior files were restored. If the error reports retained recovery files, preserve that directory and stop retries until recovery is complete. Read [media recovery](troubleshooting.md#media-and-delivery) for publication, audio or encoder failures.
 
 ## Advanced: archive and development installation
 

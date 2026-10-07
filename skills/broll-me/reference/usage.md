@@ -21,10 +21,12 @@ Place `--runtime` before the subcommand. Paths below are explicit command argume
 | `words TRANSCRIPT` | Estimated word timing from SRT/VTT cues | Correct the path or subtitle syntax |
 | `build OUT_DIR --scene SPEC.json` | HTML, palette snapshot and fonts | Correct the SceneSpec field or use a fresh output folder |
 | `build OUT_DIR FRAGMENT.html...` | Compiled custom scene HTML | Correct the fragment; do not combine with `--scene` |
-| `check BUILT.html` | Scene-contract, sampled browser and template overflow checks | Fix the reported reference, timing or layout |
+| `check BUILT.html` | Scene contracts, sampled browser errors, resource request failures and template overflow checks | Fix the reported reference, timing or layout |
 | `beats BUILT.html OUT.png TIME...` | Contact sheet at specified times | Use times within scene duration and a writable output path |
 | `render BUILT.html OUTPUT` | MP4 or alpha MOV | Read stderr and inspect the encoder/browser error |
-| `preview PLAN.json OUT.mp4` | Composite, viewer, compare, timing notes and fonts | Correct the plan or supply an approved compatible input copy |
+| `preview PLAN.json OUT.mp4` | Composite, viewer, compare, timing notes and fonts, staged before publication | Correct the plan or input; inspect retained recovery files before retrying |
+
+`words` reads cue text and timing when a WebVTT cue identifier starts with a reserved block name, such as `NOTEworthy`, `STYLE-demo`, `REGION-1` or `WEBVTT-demo`. It skips actual WebVTT headers and `NOTE`, `STYLE` and `REGION` blocks. Cue identifiers are not included in the word-timing output.
 
 Build accepts `--palette ID` or `--palette-file custom.json`, defaulting to `warm-orange`. Render accepts `--fps RATE` (default `30`) and `--quality final|draft` (default `final`). Rational FPS such as `30000/1001` is supported. Build and preview accept `--font-mode shared|embedded`, defaulting to `shared` in this CLI.
 
@@ -36,6 +38,8 @@ python3 "$BROLL_SKILL_DIR/scripts/broll.py" preview \
 ```
 
 Deliver scene HTML with its palette snapshot, fonts and required local assets in `outputs/<task>/scenes/<scene>/`. Check references after copying the bundle and render from that location. Final references must not depend on `works/`; `compare.html` may reference the source in `inputs/`. Preserve prior results on failure and report unresolved custom resources before claiming delivery complete. Engine atomic temporary files and OS temporary files keep their existing behavior.
+
+`preview` completes its media and review files in a temporary `.broll-preview-*` directory beside the output folder, then publishes them file by file. Preparation failures leave existing output files unchanged. A filesystem publication error triggers an attempt to restore previous files. An interruption or failed rollback retains the staging directory and any `.previous` backups; preserve them and inspect the outputs before retrying. Follow [media recovery](troubleshooting.md#media-and-delivery) when the error reports retained recovery files.
 
 ## Read the result
 
