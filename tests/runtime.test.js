@@ -6,6 +6,69 @@ const os = require('node:os');
 const path = require('node:path');
 const R = require('../skills/broll-me/engine/runtime');
 
+function mockSceneResources(resources = []) {
+  const vm = require('node:vm');
+  const { EventEmitter } = require('node:events');
+  const page = new EventEmitter();
+  const document = { fonts: { ready: Promise.resolve() }, getElementById: () => ({ offsetWidth: 640, offsetHeight: 360 }),
+    documentElement: { classList: { contains: () => false } } };
+  const window = { seek() {}, DURATION: 1, BROLL_KEY_TIMES: [] };
+  const request = (url, errorText) => ({ url: () => url, failure: () => errorText ? { errorText } : null });
+  let routeHandler, closeCalls = 0;
+  page.setDefaultTimeout = () => {};
+  page.route = async (pattern, handler) => { routeHandler = handler; };
+  page.goto = async () => {
+    for (const [url, errorText] of resources) {
+      await routeHandler({ request: () => request(url, errorText),
+        continue: async () => { if (errorText) page.emit('requestfailed', request(url, errorText)); },
+        abort: async () => page.emit('requestfailed', request(url, 'net::ERR_FAILED')) });
+    }
+  };
+  page.evaluate = async callback => vm.runInNewContext(`(${callback.toString()})()`, { document, window });
+  page.setViewportSize = async () => {};
+  const browser = { newPage: async () => page, close: async () => { closeCalls++; } };
+  const module = { exports: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../skills/broll-me/engine/runtime.js'), 'utf8'), {
+    module, process: { env: {} }, URL,
+    require: name => name === 'playwright' ? { chromium: { launch: async () => browser } }
+      : name === 'node:fs' ? { existsSync: () => false } : require(name),
+  });
+  return { open: () => module.exports.openScene(path.resolve('scene.html')), page, request, closeCalls: () => closeCalls };
+}
+
+test('openScene resources permit successful local and embedded loads', async () => {
+  const mock = mockSceneResources([['file:///image.png'], ['file:///font.woff2'], ['data:image/png;base64,fixture']]);
+  const scene = await mock.open();
+  assert.equal(scene.errors.length, 0);
+  assert.equal(scene.info.W, 640);
+  assert.equal(mock.closeCalls(), 0);
+  await scene.browser.close();
+  assert.equal(mock.closeCalls(), 1);
+});
+
+test('openScene resources reject missing local images and fonts and close the browser', async () => {
+  for (const filename of ['missing.png', 'missing.woff2']) {
+    const mock = mockSceneResources([[`file:///${filename}`, 'net::ERR_FILE_NOT_FOUND']]);
+    await assert.rejects(mock.open(), error => error.message.includes(filename) && error.message.includes('net::ERR_FILE_NOT_FOUND'));
+    assert.equal(mock.closeCalls(), 1);
+  }
+});
+
+test('openScene resources reject blocked remote loads and close the browser', async () => {
+  const mock = mockSceneResources([['https://example.invalid/image.png']]);
+  await assert.rejects(mock.open(), /https:\/\/example\.invalid\/image\.png.*net::ERR_FAILED/);
+  assert.equal(mock.closeCalls(), 1);
+});
+
+test('openScene resources retain late failures in the returned errors array', async () => {
+  const mock = mockSceneResources();
+  const scene = await mock.open();
+  mock.page.emit('requestfailed', mock.request('file:///late.png'));
+  assert.equal(scene.errors.length, 1);
+  assert.match(scene.errors[0], /file:\/\/\/late\.png.*request failed/);
+  await scene.browser.close();
+});
+
 test('rational FPS retains exact NTSC rates', () => {
   assert.deepEqual(R.frameRate('30000/1001'), { value: 30000 / 1001, text: '30000/1001', subframes: '120000/1001' });
   assert.equal(R.frameRate('29.97').text, '2997/100');
