@@ -131,8 +131,7 @@ def dispatch(args, runtime, environment):
     if args.command == 'render':
         return parsed_output(execute([node, engine('render.js'), args.html, args.output, args.fps, '--quality', args.quality], environment))
     if args.command == 'preview':
-        execute([python, script('composite.py'), args.plan, args.output], environment)
-        execute([python, script('make_pages.py'), args.plan, args.output, '--font-mode', args.font_mode], environment)
+        execute([python, script('preview_bundle.py'), args.plan, args.output, '--font-mode', args.font_mode], environment)
         return {'font_mode': args.font_mode, 'outputs': [str(args.output.resolve()),
                 *[str((args.output.parent / name).resolve()) for name in ['viewer.html', 'compare.html', 'TIMING.md']]]}
     raise CommandFailure('Unknown command', 2)

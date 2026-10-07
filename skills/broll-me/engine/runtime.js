@@ -67,6 +67,9 @@ async function openScene(html) {
     page.setDefaultTimeout(30000);
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
+    page.on('requestfailed', request => {
+      errors.push(`Resource load failed: ${request.url()} (${request.failure()?.errorText || 'request failed'})`);
+    });
     await page.route('**/*', route => {
       const protocol = new URL(route.request().url()).protocol;
       return ['file:', 'data:', 'about:'].includes(protocol) ? route.continue() : route.abort();

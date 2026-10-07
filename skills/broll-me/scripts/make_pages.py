@@ -42,13 +42,15 @@ def markdown_cell(value):
     return str(value).replace("\n", " ").replace("\r", " ").replace("|", "\\|")
 
 
-def write_pages(plan_path, preview_path, font_mode="embedded"):
+def write_pages(plan_path, preview_path, font_mode="embedded", publish_dir=None):
     plan_path = input_file(plan_path)
     plan, source, source_info, clips = load_plan(plan_path)
     preview = input_file(preview_path)
     if preview == source or preview in {c["path"] for c in clips}:
         raise MediaError("Preview must be a separate output file")
     outdir = preview.parent
+    # Staged bundles write here but must link relative to their final directory.
+    linkdir = Path(publish_dir).resolve() if publish_dir is not None else outdir
     preview_info = probe(preview)
     duration = preview_info["duration"]
     if abs(duration - source_info["duration"]) > 2 / float(source_info["rate"]):
@@ -67,7 +69,7 @@ def write_pages(plan_path, preview_path, font_mode="embedded"):
                 run([binary("ffmpeg"), "-v", "error", "-nostdin", "-y", "-f", "lavfi", "-i", f"color=black:s={info['width']}x{info['height']}:r={info['fps']}:d={info['duration']}", "-i", str(path), "-filter_complex", "[0:v][1:v]overlay=shortest=1:format=auto,format=yuv420p[v]", "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "20", "-t", str(info["duration"]), str(temporary)])
             web_source = web_path(panel_preview, outdir)
         else:
-            web_source = web_path(path, outdir)
+            web_source = web_path(path, linkdir)
         pages.append({"n": clip["id"], "t": clip["title"], "tc": f"{fmt(clip['in'])} – {fmt(clip['out'])}", "q": clip.get("line", ""), "f": path.name, "src": web_source, "alpha": clip["kind"] == "panel"})
     pages.insert(0, {"n": "▶", "full": True, "t": "Full preview · your video with every clip", "tc": "whole video", "q": "Composite for review. For the final cut, place the clips in your editor.", "f": preview.name, "src": web_path(preview, outdir)})
     replacements = {"/*TITLE*/": html.escape(title, quote=True), "/*FONT_CSS*/": local_fonts(outdir, font_mode)}
@@ -77,7 +79,7 @@ def write_pages(plan_path, preview_path, font_mode="embedded"):
     comparison = fill_template((TEMPLATES / "compare.html").read_text(encoding="utf-8"), {
         **replacements, "/*DUR*/0": str(duration),
         "/*MARKS*/[]": script_json([[c["in"], c["out"], c["id"], c["title"]] for c in clips]),
-        "/*ORIG*/": html.escape(web_path(source, outdir), quote=True),
+        "/*ORIG*/": html.escape(web_path(source, linkdir), quote=True),
         "/*BROLL*/": html.escape(web_path(preview, outdir), quote=True),
         "/*SUB*/": "Left or top is the original. Right or bottom has the motion graphics cut in.",
     })
