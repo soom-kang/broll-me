@@ -18,6 +18,7 @@ import composite
 import inspect_video
 import make_pages
 import media
+import preview_bundle
 import words
 
 
@@ -222,6 +223,73 @@ class ProjectFolderDeliveryTests(unittest.TestCase):
             self.assertTrue((self.output / "assets" / "broll-me-fonts" / notice).is_file())
         self.assertEqual(self.source.read_bytes(), b"source fixture")
         self.assertEqual(self.preview.read_bytes(), b"previous preview")
+
+    def test_bundle_page_failure_preserves_prior_outputs(self):
+        viewer = self.output / "viewer.html"
+        viewer.write_bytes(b"previous viewer")
+        def fake_composite(plan, output):
+            output.write_bytes(b"new preview fixture")
+        with patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(preview_bundle, "create_preview", side_effect=fake_composite), \
+             patch.object(preview_bundle, "write_pages", side_effect=ValueError("missing font")):
+            with self.assertRaisesRegex(ValueError, "missing font"):
+                preview_bundle.create_bundle(self.plan_path, self.preview)
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertEqual(viewer.read_bytes(), b"previous viewer")
+        self.assertEqual(list(self.output.parent.glob(".broll-preview-*")), [])
+
+    def test_bundle_success_keeps_final_relative_links(self):
+        def fake_composite(plan, output):
+            output.write_bytes(b"new preview fixture")
+        with patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(make_pages, "probe", side_effect=self.fake_probe), \
+             patch.object(preview_bundle, "create_preview", side_effect=fake_composite):
+            preview_bundle.create_bundle(self.plan_path, self.preview)
+        viewer = (self.output / "viewer.html").read_text()
+        comparison = (self.output / "compare.html").read_text()
+        clips = json.loads(viewer.split("const CLIPS=", 1)[1].split(";", 1)[0])
+        self.assertEqual([clip["src"] for clip in clips], ["preview.mp4", "clip%20with%20spaces.mp4"])
+        self.assertIn('src="../../inputs/source.mp4"', comparison)
+        self.assertNotIn(".broll-preview-", viewer + comparison)
+        self.assertEqual(self.preview.read_bytes(), b"new preview fixture")
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertEqual(list(self.output.parent.glob(".broll-preview-*")), [])
+
+    def test_bundle_publication_failure_rolls_back_all_files(self):
+        stage = self.directory / "staged"
+        stage.mkdir()
+        (stage / "preview.mp4").write_bytes(b"new preview fixture")
+        (stage / "viewer.html").write_bytes(b"new viewer fixture")
+        viewer = self.output / "viewer.html"
+        viewer.write_bytes(b"previous viewer")
+        replace = preview_bundle.os.replace
+        def fail_viewer(source, destination):
+            if Path(source) == stage / "viewer.html":
+                raise OSError("injected publication failure")
+            return replace(source, destination)
+        with patch.object(preview_bundle.os, "replace", side_effect=fail_viewer):
+            with self.assertRaisesRegex(media.MediaError, "prior files restored"):
+                preview_bundle.publish_bundle(stage, self.output)
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertEqual(viewer.read_bytes(), b"previous viewer")
+
+    def test_bundle_interruption_retains_recovery_files(self):
+        def fake_composite(plan, output):
+            output.write_bytes(b"new preview fixture")
+        def interrupt_after_backup(stage, outdir, protected):
+            backup = stage / ".previous" / "preview.mp4"
+            backup.parent.mkdir()
+            self.preview.replace(backup)
+            raise KeyboardInterrupt()
+        with patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(preview_bundle, "create_preview", side_effect=fake_composite), \
+             patch.object(preview_bundle, "write_pages"), \
+             patch.object(preview_bundle, "publish_bundle", side_effect=interrupt_after_backup):
+            with self.assertRaisesRegex(preview_bundle.RecoveryError, "recovery files retained"):
+                preview_bundle.create_bundle(self.plan_path, self.preview)
+        stages = list(self.output.parent.glob(".broll-preview-*"))
+        self.assertEqual(len(stages), 1)
+        self.assertEqual((stages[0] / ".previous" / "preview.mp4").read_bytes(), b"previous preview")
 
     def test_wrong_input_depth_fails_before_publishing_or_changing_media(self):
         self.plan["video"] = "../inputs/source.mp4"
