@@ -22,9 +22,15 @@ def parse_cues(text):
     text = text.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
     cues = []
     previous = -1
-    for block in re.split(r"\n\s*\n", text.strip()):
+    for block_index, block in enumerate(re.split(r"\n\s*\n", text.strip())):
         lines = block.strip().splitlines()
-        if not lines or lines[0].startswith(("WEBVTT", "NOTE", "STYLE", "REGION")):
+        if not lines:
+            continue
+        first = lines[0]
+        if block_index == 0 and re.fullmatch(r"WEBVTT(?:[ \t].*)?", first):
+            continue
+        # Reserved blocks require a token boundary, not a cue-ID prefix.
+        if re.match(r"NOTE(?:[ \t]|$)", first) or first in {"STYLE", "REGION"}:
             continue
         timing = next((i for i, line in enumerate(lines[:2]) if "-->" in line), None)
         if timing is None:

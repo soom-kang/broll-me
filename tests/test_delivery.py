@@ -26,6 +26,15 @@ def info(duration=10, alpha=False):
 
 
 class SubtitleTests(unittest.TestCase):
+    def test_reserved_prefix_cue_ids_are_preserved(self):
+        blocks = ["WEBVTT", "NOTE comment\nignored", "STYLE\n::cue { color: white; }", "REGION\nid:local"]
+        identifiers = ["opening", "NOTEworthy", "STYLE-demo", "REGION-1", "WEBVTT-demo"]
+        blocks += [f"{identifier}\n00:{index:02d}.000 --> 00:{index + 1:02d}.000\n{identifier}"
+                   for index, identifier in enumerate(identifiers, 1)]
+        cues = words.parse_cues("\n\n".join(blocks))
+        self.assertEqual([cue[2] for cue in cues], [[identifier] for identifier in identifiers])
+        self.assertEqual([(cue[0], cue[1]) for cue in cues], [(index, index + 1) for index in range(1, 6)])
+
     def test_srt_and_vtt_have_same_estimates(self):
         srt = "1\r\n00:00:01,000 --> 00:00:03,000\r\n원하는 색감\r\n"
         vtt = "\ufeffWEBVTT\n\nNOTE local note\nignored\n\nopening\n00:01.000 --> 00:03.000 align:start position:10%\n<v Speaker><b>원하는</b> 색감\n"
