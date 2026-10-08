@@ -33,7 +33,7 @@ Keep the English and Korean versions aligned when editing paired documents. Pres
 
 The portable skill lives in `skills/broll-me/`. Demo footage, local runtimes, evaluation records and private artwork stay outside the skill archives. Public release files are available from [GitHub Releases](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2).
 
-Retain the exact [MIT license](skills/broll-me/LICENSE) and [third-party notices](skills/broll-me/THIRD_PARTY_NOTICES.md), including bundled font and icon licenses. See [package sources and scope](skills/broll-me/reference/provenance.md) for acknowledgments and asset provenance.
+Retain the exact [MIT license](LICENSE) and [third-party notices](skills/broll-me/THIRD_PARTY_NOTICES.md), including bundled font and icon licenses. See [package sources and scope](skills/broll-me/reference/provenance.md) for acknowledgments and asset provenance.
 
 ## Verification history
 

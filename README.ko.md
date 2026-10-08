@@ -16,10 +16,10 @@ broll-me는 이 과정을 하나의 프롬프트 흐름으로 연결합니다. �
 
 ## 적용 전후
 
-| Input · 원본 영상 | Output · broll-me 적용 결과 |
-| --- | --- |
+| Input · 원본 영상                                                                                                       | Output · broll-me 적용 결과                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [![입력 프리뷰: 구간 내내 카페에서 말하는 화자](docs/assets/onnimm-context-input.gif)](docs/assets/onnimm-context.html) | [![결과 프리뷰: 같은 화자, 동의 이력 그래픽, 다시 화자](docs/assets/onnimm-context-output.gif)](docs/assets/onnimm-context.html) |
-| [입력 MP4 보기](docs/assets/onnimm-context-input.mp4) | [결과 MP4 보기](docs/assets/onnimm-context-output.mp4) |
+| [입력 MP4 보기](docs/assets/onnimm-context-input.mp4)                                                                   | [결과 MP4 보기](docs/assets/onnimm-context-output.mp4)                                                                           |
 
 같은 17.851초 구간을 비교합니다. 적용 결과에는 동의 이력 그래픽이 잠깐 나온 뒤 다시 화자로 돌아옵니다. 설명용 그래픽이며 실제 제품 화면이나 고객 기록은 아닙니다.
 
@@ -77,4 +77,4 @@ HTML 기반 모션 그래픽을 만듭니다. 실사 영상 생성, 음성 인�
 
 ## 라이선스
 
-[MIT](skills/broll-me/LICENSE). 재배포할 때는 라이선스와 [글꼴·아이콘 고지](skills/broll-me/THIRD_PARTY_NOTICES.md)를 유지하세요. 작업 흐름과 에셋의 참고 출처는 [출처 안내](skills/broll-me/reference/provenance.md)에 정리되어 있습니다.
+[MIT](LICENSE). 재배포할 때는 라이선스와 [글꼴·아이콘 고지](skills/broll-me/THIRD_PARTY_NOTICES.md)를 유지하세요. 작업 흐름과 에셋의 참고 출처는 [출처 안내](skills/broll-me/reference/provenance.md)에 정리되어 있습니다.

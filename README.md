@@ -16,10 +16,10 @@ broll-me brings those steps into one prompt-driven workflow: propose a scene and
 
 ## Before and after
 
-| Input · original footage | Output · broll-me |
-| --- | --- |
+| Input · original footage                                                                                                           | Output · broll-me                                                                                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [![Input preview: the café speaker throughout the passage](docs/assets/onnimm-context-input.gif)](docs/assets/onnimm-context.html) | [![Output preview: the same speaker, then a consent-history graphic, then the speaker again](docs/assets/onnimm-context-output.gif)](docs/assets/onnimm-context.html) |
-| [Watch input MP4](docs/assets/onnimm-context-input.mp4) | [Watch output MP4](docs/assets/onnimm-context-output.mp4) |
+| [Watch input MP4](docs/assets/onnimm-context-input.mp4)                                                                            | [Watch output MP4](docs/assets/onnimm-context-output.mp4)                                                                                                             |
 
 Both show the same 17.851-second passage. The output adds a short consent-history graphic, then returns to the speaker. It is an illustrative graphic, not a product screen or customer record.
 
@@ -77,4 +77,4 @@ Subtitle-derived word timing and speaker-position estimates need playback review
 
 ## License
 
-[MIT](skills/broll-me/LICENSE). Keep the license and [third-party font and icon notices](skills/broll-me/THIRD_PARTY_NOTICES.md) with redistributed copies. See [sources and acknowledgments](skills/broll-me/reference/provenance.md) for workflow and asset references.
+[MIT](LICENSE). Keep the license and [third-party font and icon notices](skills/broll-me/THIRD_PARTY_NOTICES.md) with redistributed copies. See [sources and acknowledgments](skills/broll-me/reference/provenance.md) for workflow and asset references.
