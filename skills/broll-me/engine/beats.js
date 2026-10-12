@@ -2,20 +2,20 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const os = require('node:os');
 const R = require('./runtime');
 
 async function beats(htmlArgument, outputArgument, timeArguments) {
   const html = R.inputFile(htmlArgument);
   const times = timeArguments.map(Number);
   if (!times.length || times.some(t => !Number.isFinite(t) || t < 0)) throw new Error('Provide at least one finite non-negative beat time');
-  let scene, ff, temporaryDir;
+  const output = R.validateOutputPath(outputArgument, '.png', [html]);
+  let scene, ff, temporaryDir, result, primaryError, published = false;
   try {
     scene = await R.openScene(html);
     const { page, info, errors } = scene;
     if (times.some(t => t > info.T)) throw new Error('Beat time exceeds scene duration');
-    const output = R.outputFile(outputArgument, '.png', [html]);
-    temporaryDir = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-beats-'));
+    R.outputFile(output, '.png', [html]);
+    temporaryDir = fs.mkdtempSync(path.join(path.dirname(output), '.broll-beats-'));
     const temporary = path.join(temporaryDir, 'sheet.png');
     if (info.alpha) await page.evaluate(() => { document.documentElement.style.background = '#000000'; document.body.style.background = '#000000'; });
     for (let index = 0; index < times.length; index++) {
@@ -27,13 +27,30 @@ async function beats(htmlArgument, outputArgument, timeArguments) {
     ff = R.encoder(['-v', 'error', '-nostdin', '-y', '-i', path.join(temporaryDir, '%04d.png'), '-vf', `tile=${columns}x${rows}:padding=4:color=white`, '-frames:v', '1', temporary]);
     await ff.finish();
     if (!fs.existsSync(temporary) || !fs.statSync(temporary).size) throw new Error('FFmpeg produced no sheet');
-    fs.copyFileSync(temporary, output);
-    console.log(JSON.stringify({ status: 'captured', output, times, width: info.W, height: info.H }));
+    result = { status: 'captured', output, times, width: info.W, height: info.H };
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    if (ff) await ff.stop();
-    if (scene) await scene.browser.close();
-    if (temporaryDir) fs.rmSync(temporaryDir, { recursive: true, force: true });
+    const failures = primaryError?.cleanupFailed ? [primaryError.message] : [];
+    const cleanup = await Promise.allSettled([
+      Promise.resolve().then(() => { if (ff) return ff.stop(); }),
+      Promise.resolve().then(() => { if (scene) return scene.browser.close(); }),
+    ]);
+    for (const outcome of cleanup) if (outcome.status === 'rejected') failures.push(outcome.reason.message || String(outcome.reason));
+    // Close resources and recheck identity before replacing the directory entry.
+    if (result && !failures.length) {
+      try {
+        R.validateOutputPath(output, '.png', [html]);
+        fs.renameSync(path.join(temporaryDir, 'sheet.png'), output);
+        published = true;
+      } catch (error) { failures.push(error.message); }
+    }
+    try { if (temporaryDir) fs.rmSync(temporaryDir, { recursive: true, force: true }); }
+    catch (error) { failures.push(error.message); }
+    if (failures.length) throw new Error(`Beat cleanup or publication failed: ${failures.join('; ')}; sheet ${published ? 'published' : 'not published'}${temporaryDir ? '; inspect staging path ' + temporaryDir : ''}`);
   }
+  console.log(JSON.stringify(result));
 }
 
 if (require.main === module) {

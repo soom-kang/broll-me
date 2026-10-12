@@ -9,11 +9,11 @@ import re
 import sys
 from pathlib import Path
 from urllib.parse import quote
-from media import MediaError, atomic_output, binary, input_file, load_plan, probe, run
+from media import MediaError, validate_output_path, atomic_output, binary, input_file, load_plan, probe, run
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 sys.path.insert(0, str(TEMPLATES.parent / "engine"))
-from fonts import font_css
+from fonts import font_css, validate_shared_fonts
 
 
 def script_json(value):
@@ -43,12 +43,29 @@ def markdown_cell(value):
 
 
 def write_pages(plan_path, preview_path, font_mode="embedded", publish_dir=None):
+    # The preview may be a readable input symlink; write beside the selected path.
+    outdir = Path(preview_path).expanduser().absolute().parent
+    page_names = ("viewer.html", "compare.html", "TIMING.md")
+    for name in page_names:
+        validate_output_path(outdir / name)
+    outdir = outdir.resolve()
     plan_path = input_file(plan_path)
     plan, source, source_info, clips = load_plan(plan_path)
     preview = input_file(preview_path)
     if preview == source or preview in {c["path"] for c in clips}:
         raise MediaError("Preview must be a separate output file")
-    outdir = preview.parent
+    input_paths = [plan_path, source, preview, *(c["path"] for c in clips)]
+    panel_previews = {
+        index: outdir / (f"{index:02d}-" + clip["path"].stem + "_preview.mp4")
+        for index, clip in enumerate(clips, 1) if clip["kind"] == "panel"
+    }
+    # Check every known destination before rendering a panel or copying fonts.
+    for output in [*(outdir / name for name in page_names), *panel_previews.values()]:
+        validate_output_path(output, inputs=input_paths)
+    if font_mode == "shared":
+        validate_shared_fonts(outdir)
+    elif font_mode != "embedded":
+        raise ValueError("font_mode must be shared or embedded")
     # Staged bundles write here but must link relative to their final directory.
     linkdir = Path(publish_dir).resolve() if publish_dir is not None else outdir
     preview_info = probe(preview)
@@ -59,11 +76,10 @@ def write_pages(plan_path, preview_path, font_mode="embedded", publish_dir=None)
         raise MediaError("Preview dimensions or FPS differ from source")
     title = plan.get("title", "Video")
     pages = []
-    input_paths = [plan_path, source, preview, *(c["path"] for c in clips)]
     for index, clip in enumerate(clips, 1):
         path = clip["path"]
         if clip["kind"] == "panel":
-            panel_preview = outdir / (f"{index:02d}-" + path.stem + "_preview.mp4")
+            panel_preview = panel_previews[index]
             info = clip["info"]
             with atomic_output(panel_preview, inputs=input_paths, suffix=".mp4") as temporary:
                 run([binary("ffmpeg"), "-v", "error", "-nostdin", "-y", "-f", "lavfi", "-i", f"color=black:s={info['width']}x{info['height']}:r={info['fps']}:d={info['duration']}", "-i", str(path), "-filter_complex", "[0:v][1:v]overlay=shortest=1:format=auto,format=yuv420p[v]", "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "20", "-t", str(info["duration"]), str(temporary)])
@@ -95,7 +111,7 @@ def write_pages(plan_path, preview_path, font_mode="embedded", publish_dir=None)
         with atomic_output(outdir / filename, inputs=input_paths) as temporary:
             temporary.write_text(content, encoding="utf-8")
         print(f"wrote {outdir / filename}")
-    return [outdir / name for name in ("viewer.html", "compare.html", "TIMING.md")]
+    return [outdir / name for name in page_names]
 
 
 def main():

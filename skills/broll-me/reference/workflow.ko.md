@@ -110,9 +110,11 @@ Agent는 공통 CLI와 [장면 템플릿](scenes.md)을 사용합니다. Card와
 
 Draft와 주요 frame을 여세요. 한글 가독성, 대비, cutaway timing, 전환을 확인하세요. 투명 panel은 구간 전체에서 화자를 가리지 않아야 합니다. 바꿀 시간이나 문구를 agent에게 알려 주세요.
 
-Draft는 frame당 한 번 캡처하며 motion blur를 생략합니다. Final은 4개 subframe에 motion blur를 적용합니다. 크기, FPS, frame 수, container, alpha 동작은 같습니다. Draft는 검토용이므로 전달할 결과에는 final 렌더링을 요청하세요.
+Draft는 frame당 한 번 캡처하며 motion blur를 생략합니다. Final은 4개 subframe에 motion blur를 적용합니다. 투명 final 렌더링은 premultiplied color를 평균 낸 뒤 straight alpha로 복원하므로 투명도가 변할 때 색이 이중으로 어두워지지 않습니다. 크기, FPS, frame 수, 출력 codec은 같습니다. Draft는 검토용이므로 전달할 결과에는 final 렌더링을 요청하세요.
 
 `check`는 scene 계약, 표본 시점의 browser 오류, resource 요청 실패, template text overflow를 검사합니다. 재생 확인도 필요합니다. 글자가 잘리면 문구를 줄이거나 장면을 나눈 뒤 다시 build하세요. Browser나 encoder 오류는 CLI JSON과 stderr에서 확인하고 원인을 고친 뒤 해당 단계만 재실행하세요. 이전 결과는 보존합니다.
+
+Timeout은 `124`를 반환하며 강제 종료 전에 cleanup을 요청합니다. Render는 encoder와 browser를 정리한 뒤 임시 video를 최종 경로로 옮깁니다. 재시도 전에 cleanup 진단과 남은 staging 파일을 확인하세요. [Timeout 복구](troubleshooting.md#runtime-and-browser)를 참고하세요.
 
 ## 5. 최종 파일 받기
 
@@ -120,7 +122,15 @@ Draft는 frame당 한 번 캡처하며 motion blur를 생략합니다. Final은 
 
 원본 영상 작업은 `preview.mp4`, `viewer.html`, `compare.html`, `TIMING.md`도 받습니다. 전체 화면 card는 MP4와 `kind:full`을 사용합니다. Panel은 `bg:null`을 유지하며 ProRes 4444 MOV와 `kind:panel`을 사용합니다. 검토 페이지가 참조하는 clip과 입력 파일의 경로를 유지하세요. Preview로 삽입을 검토하고, 최종 master는 편집자가 승인합니다.
 
-Final 렌더링 전에 scene bundle 전체를 `outputs/<task>/scenes/<scene>/`에 복사하세요. HTML, `palette.resolved.json`, shared `assets/broll-me-fonts/`, 필요한 local assets를 포함합니다. 전달 위치에서 참조를 확인하세요. 최종 scene과 검토 파일이 `works/`에 의존하면 안 됩니다. `compare.html`은 `inputs/`의 원본을 참조할 수 있습니다. 확인하지 못한 custom resource가 있으면 전달 완료로 보고하지 않습니다. Build나 preview에서 `--font-mode embedded`를 선택하면 개별 HTML을 파일 하나로 전달할 수 있습니다. 두 방식 모두 font 고지를 유지합니다.
+검토 페이지의 배경에서 `Space`를 누르면 재생을 전환합니다. 배경의 방향 키는 viewer에서 clip을 선택하고 compare에서 2초씩 이동합니다. Control에 focus가 있으면 해당 control의 키 동작을 유지합니다. Compare의 seek slider는 방향 키 한 번에 2초씩 이동하며, slider의 `Space`는 재생을 전환하지 않습니다.
+
+Media를 불러오지 못하면 해당 경로와 Retry가 표시됩니다. Local 파일을 복구하거나 참조를 고친 뒤 다시 불러오세요. Viewer의 clip 탐색과 compare의 layout 선택은 계속 사용할 수 있습니다. 자동 재생이 차단되면 Play를 직접 누르세요. 계속 불러오지 못하는 media는 검토하지 못했다고 보고하고 [검토 페이지 복구](troubleshooting.md#review-pages)를 참고하세요.
+
+Compare의 active video가 데이터를 기다리거나 다시 불러오면 두 영상이 검토 시점에서 함께 멈춥니다. 두 영상이 모두 준비되면 Play를 눌러 재생을 계속하세요.
+
+Final 렌더링 전에 scene bundle 전체를 `outputs/<task>/scenes/<scene>/`에 복사하세요. HTML, `palette.resolved.json`, shared `assets/broll-me-fonts/`, 필요한 local assets를 포함합니다. 전달 위치에서 참조를 확인하세요. 최종 scene과 검토 파일이 `works/`에 의존하면 안 됩니다. `compare.html`은 `inputs/`의 원본을 참조할 수 있습니다. 확인하지 못한 custom resource가 있으면 전달 완료로 보고하지 않습니다.
+
+Build나 preview에서 `--font-mode embedded`를 선택하면 font 데이터와 [Geist](../engine/fonts/OFL-Geist.txt), [Noto Sans KR](../engine/fonts/OFL-NotoSansKR.txt)의 OFL 고지 전문을 각 HTML 안에 포함합니다. HTML 소스에서 이름이 붙은 CSS 주석을 읽을 수 있으며 화면에 별도 내용을 표시하지 않습니다. Shared 모드는 font 파일 3개와 두 OFL 고지를 인접한 asset 폴더에 복사합니다. 두 모드 모두 필수 원본 고지가 누락되거나 비어 있으면 실패합니다. 참조하는 media, custom assets와 해당 고지는 HTML과 함께 별도로 전달하세요.
 
 Preview는 원본 파일을 보존하고 audio stream을 복사합니다. Video와 audio가 0에서 시작해야 하며, audio는 video 길이 안에 들어오고 MP4와 호환되어야 합니다. 지원하지 않는 timing이나 codec은 실패합니다. 승인된 호환 입력 사본을 제공하거나 별도 오디오 편집을 진행하세요. Skill은 복구를 위해 원본 오디오를 임의로 정규화하거나 자르거나 변환하지 않습니다. 삽입 구간이 clip보다 길면 마지막 frame을 끝까지 유지합니다.
 

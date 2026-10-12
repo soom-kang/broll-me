@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 import os
 import re
@@ -21,6 +22,33 @@ HEX = re.compile(r"#[0-9a-fA-F]{6}\Z")
 
 class PaletteError(ValueError):
     """A palette cannot be used safely or reproducibly."""
+
+
+class PaletteRecoveryError(PaletteError):
+    """Keep the writer lock until retained publication state has been inspected."""
+
+
+@contextmanager
+def snapshot_lock(output_dir):
+    directory = Path(output_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    lock = directory / ".broll-palette.lock"
+    try:
+        lock.mkdir()
+    except FileExistsError as error:
+        raise PaletteError(f"palette writer lock exists: {lock}; inspect the active writer or retained recovery files before retrying") from error
+    retain = False
+    try:
+        yield
+    except PaletteRecoveryError:
+        retain = True
+        raise
+    finally:
+        if not retain:
+            try:
+                lock.rmdir()
+            except OSError as error:
+                raise PaletteRecoveryError(f"palette writer cleanup failed at {lock}: {error}; publication may already be complete; inspect the outputs and retained lock before retrying") from error
 
 
 def luminance(color: str) -> float:
@@ -121,14 +149,15 @@ def preflight_snapshot(palette: dict, path: str | Path, protected_paths=()) -> b
     return False
 
 
-def write_snapshot(palette: dict, path: str | Path, protected_paths=()) -> None:
-    """Publish a complete snapshot atomically, without overwriting files or following links."""
+def _publish_snapshot(palette: dict, path: str | Path, protected_paths=()):
+    """Called with snapshot_lock held; return the identity of a newly created snapshot."""
     palette = validate_palette(palette)
     target = Path(path)
     if preflight_snapshot(palette, target, protected_paths):
-        return
+        return None
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
+    created = None
     try:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
                                          prefix=".broll-palette-", suffix=".tmp", delete=False) as stream:
@@ -138,13 +167,29 @@ def write_snapshot(palette: dict, path: str | Path, protected_paths=()) -> None:
             os.fsync(stream.fileno())
         # Atomic create-if-absent. A racing file or symlink cannot be overwritten.
         try:
+            info = temporary.stat()
             os.link(temporary, target)
+            created = info.st_dev, info.st_ino
+            return created
         except FileExistsError:
             if not preflight_snapshot(palette, target, protected_paths):
                 raise PaletteError("palette snapshot changed while publishing; retry in a new output directory")
     finally:
         if temporary is not None:
-            temporary.unlink(missing_ok=True)
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError as error:
+                if created is not None:
+                    raise PaletteRecoveryError(f"palette snapshot published at {target}; recovery file retained at {temporary}; temporary cleanup failed: {error}; inspect {target.parent / '.broll-palette.lock'} before retrying") from error
+                raise
+
+
+def write_snapshot(palette: dict, path: str | Path, protected_paths=()) -> None:
+    """Coordinate immutable snapshot publication with scene builders."""
+    palette = validate_palette(palette)
+    preflight_snapshot(palette, path, protected_paths)
+    with snapshot_lock(Path(path).parent):
+        _publish_snapshot(palette, path, protected_paths)
 
 
 def main() -> int:

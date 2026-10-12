@@ -7,11 +7,14 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
+import shutil
+import tempfile
 from pathlib import Path
 
-from palette import (PaletteError, css_variables, preflight_snapshot, resolve_palette,
-                     validate_palette, write_snapshot)
+from palette import (PaletteError, PaletteRecoveryError, _publish_snapshot, css_variables,
+                     preflight_snapshot, resolve_palette, snapshot_lock, validate_palette)
 from fonts import font_css
 from scene_templates import compile_scene, load_scene
 
@@ -22,20 +25,73 @@ CURSOR = ('<svg id="cursor" viewBox="0 0 40 56"><path '
           'stroke-linejoin="round"/></svg>')
 
 
+def check_destination(destination: Path, protected) -> None:
+    if destination.is_symlink():
+        raise ValueError(f"destination must not be a symlink: {destination}; use a new output directory")
+    for path in protected:
+        if (destination.resolve() == path.resolve()
+                or (destination.exists() and path.exists() and destination.samefile(path))):
+            raise ValueError(f"destination must not overwrite an input: {destination}; use a new output directory")
+
+
+def check_batch_destinations(sources, destinations) -> None:
+    """Reserve names in a disposable target-filesystem directory, never final outputs."""
+    if len(destinations) < 2:
+        return
+    groups = {}
+    for index, destination in enumerate(destinations):
+        destination = Path(destination)
+        resolved = destination.resolve()
+        anchor = resolved.parent
+        while not anchor.exists():
+            anchor = anchor.parent
+        if not anchor.is_dir():
+            raise ValueError(f"output parent must be a directory: {anchor}")
+        info = anchor.stat()
+        group = groups.setdefault((info.st_dev, info.st_ino), (anchor, []))
+        source = sources[index] if index < len(sources) else "unspecified source"
+        group[1].append((source, destination, resolved.relative_to(anchor)))
+    for anchor, outputs in groups.values():
+        if len(outputs) < 2:
+            continue
+        # A new directory inherits the target filesystem's name handling. Full
+        # names also preserve NAME_MAX, unlike prefixing final filenames.
+        with tempfile.TemporaryDirectory(prefix=".broll-build-preflight-", dir=anchor) as temporary:
+            reservations = {}
+            for source, destination, relative in outputs:
+                reservation = Path(temporary) / relative
+                reservation.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    with reservation.open("xb"):
+                        pass
+                except FileExistsError as error:
+                    info = reservation.stat()
+                    previous_source, previous_destination = reservations[(info.st_dev, info.st_ino)]
+                    raise ValueError(
+                        f"batch output destinations collide on this filesystem: "
+                        f"{previous_source} -> {previous_destination}; {source} -> {destination}; "
+                        "build them into separate directories"
+                    ) from error
+                info = reservation.stat()
+                reservations[(info.st_dev, info.st_ino)] = (source, destination)
+
+
 def preflight_outputs(sources, destinations, palette: dict, palette_file=None) -> None:
     """Check the entire batch before any scene or palette output is written."""
+    sources, destinations = list(sources), list(destinations)
     protected = [Path(source) for source in sources]
     if palette_file is not None:
         protected.append(Path(palette_file))
-    input_paths = {path.resolve() for path in protected}
     for source in sources:
         if not Path(source).is_file():
             raise ValueError(f"source fragment is not a file: {source}")
     for destination in destinations:
         destination = Path(destination)
-        if destination.resolve() in input_paths:
-            raise ValueError(f"destination must not overwrite an input: {destination}")
+        if destination.name.casefold() == "palette.resolved.json":
+            raise ValueError(f"HTML destination conflicts with the reserved palette snapshot: {destination}; use a different output path")
+        check_destination(destination, protected)
         preflight_snapshot(palette, destination.parent / "palette.resolved.json", protected)
+    check_batch_destinations(sources, destinations)
 
 
 def build(src: str | Path, dst: str | Path, *, palette: str | None = None,
@@ -70,9 +126,58 @@ def build(src: str | Path, dst: str | Path, *, palette: str | None = None,
             f'<script>{(E / "motion.js").read_text(encoding="utf-8")}</script>'
             f'<script>{js}</script></body></html>')
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(page, encoding="utf-8")
-    write_snapshot(resolved, destination.parent / "palette.resolved.json",
-                   (source, palette_file) if palette_file is not None else (source,))
+    protected = (source, Path(palette_file)) if palette_file is not None else (source,)
+    stage = Path(tempfile.mkdtemp(prefix=".broll-build-", dir=destination.parent))
+    temporary = stage / destination.name
+    retain = False
+    published = False
+    try:
+        with temporary.open("x", encoding="utf-8") as stream:
+            stream.write(page)
+            stream.flush()
+            os.fsync(stream.fileno())
+        snapshot = destination.parent / "palette.resolved.json"
+        with snapshot_lock(destination.parent):
+            check_destination(destination, protected)
+            existed = preflight_snapshot(resolved, snapshot, protected)
+            try:
+                created = _publish_snapshot(resolved, snapshot, protected)
+            except PaletteRecoveryError:
+                raise
+            except BaseException as error:
+                if not existed and snapshot.exists():
+                    raise PaletteRecoveryError(f"snapshot publication interrupted: {error}; recovery files retained at {stage}; inspect {snapshot} and {destination.parent / '.broll-palette.lock'} before retrying") from error
+                raise
+            try:
+                check_destination(destination, protected)
+                preflight_snapshot(resolved, snapshot, protected)
+                # Replace the directory entry, never truncate a shared input inode.
+                os.replace(temporary, destination)
+                published = True
+            except BaseException as error:
+                if created is not None:
+                    try:
+                        if snapshot.is_symlink():
+                            raise OSError("palette snapshot changed during rollback")
+                        info = snapshot.stat()
+                        if (info.st_dev, info.st_ino) != created:
+                            raise OSError("palette snapshot ownership changed during rollback")
+                        snapshot.unlink()
+                    except OSError as recovery:
+                        raise PaletteRecoveryError(f"build publication failed: {error}; recovery files retained at {stage}; snapshot rollback failed: {recovery}; inspect {snapshot} and {destination.parent / '.broll-palette.lock'} before retrying") from error
+                raise
+    except PaletteRecoveryError as error:
+        retain = True
+        if str(stage) not in str(error):
+            raise PaletteRecoveryError(f"{error}; prepared HTML recovery directory retained at {stage}") from error
+        raise
+    finally:
+        if not retain:
+            try:
+                shutil.rmtree(stage)
+            except OSError as error:
+                state = "HTML and palette published" if published else "HTML not published"
+                raise PaletteRecoveryError(f"build cleanup failed at {stage}: {error}; {state}; inspect the outputs and recovery directory before retrying") from error
     return destination
 
 

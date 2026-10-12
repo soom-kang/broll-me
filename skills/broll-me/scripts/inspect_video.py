@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
-from media import MediaError, atomic_output, binary, input_file, probe, run
+from media import MediaError, validate_output_path, atomic_output, binary, input_file, probe, run
 
 
 def analyze_frames(frames, width, height, duration):
@@ -59,9 +59,10 @@ def inspect_video(video, outdir):
     except ImportError as error:
         raise MediaError("NumPy is missing; run setup.sh and use runtime/.venv/bin/python") from error
     source = input_file(video)
-    outdir = Path(outdir).resolve()
-    if source in {outdir / "contact.png", outdir / "video.json"}:
-        raise MediaError("Inspection output must not overwrite the source")
+    outdir = Path(outdir).expanduser().absolute()
+    for name in ("contact.png", "video.json"):
+        validate_output_path(outdir / name, inputs=[source])
+    outdir = outdir.resolve()
     info = probe(source)
     outdir.mkdir(parents=True, exist_ok=True)
     with atomic_output(outdir / "contact.png", inputs=[source], suffix=".png") as temporary:

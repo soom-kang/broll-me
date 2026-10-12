@@ -68,6 +68,7 @@ HTML과 함께 제공된 파일은 같은 구조로 보관하세요. 옮기거�
 - [적용 예시](docs/onnimm-demo.ko.md) · [핑크 카드 샘플 재현](docs/pink-demo.ko.md)
 - [문제 해결](skills/broll-me/reference/troubleshooting.md)
 - [기여 및 검증 안내](CONTRIBUTING.md)
+- [현재 checkout QA, 2026-10-12](reports/QA-2026-10-12.md): 확인된 문제, JIRA 형식의 로컬 티켓, 검증 범위
 
 ## 지원 범위와 제약
 

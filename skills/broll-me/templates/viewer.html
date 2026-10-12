@@ -30,6 +30,11 @@ button{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:v
 button:hover{border-color:var(--muted)}
 button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:disabled{cursor:not-allowed;opacity:.55}
+.media-status{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px;font-size:14px}
+.media-status[hidden]{display:none}
+.media-status p{margin:0}
+.media-status button{justify-self:start}
 .spacer{flex:1}
 .hint{font-size:12.5px;color:var(--muted)}
 .list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
@@ -51,7 +56,7 @@ button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
   </header>
   <div class="main">
     <section class="player" aria-label="Clip player">
-      <div class="screen"><video id="vid" playsinline muted autoplay loop preload="auto"></video></div>
+      <div class="screen"><video id="vid" playsinline muted loop preload="auto"></video></div>
       <div class="info">
         <div class="meta"><span class="tc" id="tc"></span><button type="button" id="snd" style="padding:3px 10px;font-size:13px">Sound on</button><span class="tag" id="tag" hidden>Transparent overlay</span></div>
         <h2 class="title" id="title"></h2>
@@ -59,10 +64,15 @@ button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
         <div class="file" id="file"></div>
         <div class="controls">
           <button id="prev" type="button">← Prev</button>
-          <button id="play" type="button" class="primary">Pause</button>
+          <button id="play" type="button" class="primary" disabled>Play</button>
           <button id="next" type="button">Next →</button>
           <span class="spacer"></span>
           <label class="hint"><input type="checkbox" id="auto"> Play all in order</label>
+        </div>
+        <div class="media-status" id="media-status" role="status" aria-live="polite" hidden>
+          <p id="media-message"></p>
+          <div class="file" id="failed-source"></div>
+          <button id="retry" type="button">Retry media</button>
         </div>
       </div>
     </section>
@@ -75,7 +85,8 @@ button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 const CLIPS=/*CLIPS*/[];
 const $=id=>document.getElementById(id);
 const vid=$('vid'), list=$('list');
-let cur=0, touched=false; addEventListener('pointerdown',()=>{touched=true;},{capture:true}); addEventListener('keydown',()=>{touched=true;},{capture:true});
+let cur=0, touched=false, generation=0, mediaState='loading', soundEnabled=null;
+addEventListener('pointerdown',()=>{touched=true;},{capture:true}); addEventListener('keydown',()=>{touched=true;},{capture:true});
 for (const [i,c] of CLIPS.entries()) {
   const item=document.createElement('li');item.className='item';
   const button=document.createElement('button');button.type='button';button.dataset.i=String(i);
@@ -86,19 +97,70 @@ for (const [i,c] of CLIPS.entries()) {
   }
   button.append(number,metadata);item.append(button);list.append(item);
 }
-function show(i){
+function syncControls(){
+  const unavailable=mediaState==='loading'||mediaState==='error';
+  $('play').textContent=mediaState==='playing'?'Pause':'Play'; $('play').disabled=unavailable;
+  $('snd').disabled=unavailable; $('auto').disabled=unavailable;
+  $('snd').textContent=vid.muted?'Sound on':'Sound off';
+}
+function clearStatus(){
+  $('media-status').hidden=true; $('media-message').textContent=''; $('failed-source').textContent=''; $('retry').hidden=true;
+}
+function status(message,canRetry){
+  $('media-message').textContent=message; $('failed-source').textContent=canRetry?(vid.getAttribute('src')||CLIPS[cur].src):'';
+  $('retry').hidden=!canRetry; $('media-status').hidden=false;
+}
+function failed(message){
+  mediaState='error'; syncControls(); status(message,true);
+}
+function currentSource(){
+  return !vid.currentSrc||vid.currentSrc===new URL(CLIPS[cur].src,document.baseURI).href;
+}
+function requestPlay(token=generation){
+  if(mediaState==='error')return;
+  try{
+    Promise.resolve(vid.play()).catch(error=>{
+      if(token!==generation||error.name==='AbortError')return;
+      if(mediaState==='error')return;
+      if(error.name==='NotAllowedError'){
+        mediaState='paused'; syncControls(); status('Playback was blocked. Select Play to start this clip.',false);
+      }else failed('This clip could not be played. Check the file and format, then retry.');
+    });
+  }catch(error){
+    if(token===generation)failed('This clip could not be played. Check the file and format, then retry.');
+  }
+}
+function show(i,retry=false){
+  const muted=vid.muted;
   cur=(i+CLIPS.length)%CLIPS.length; const c=CLIPS[cur];
+  generation++; mediaState='loading'; clearStatus();
   $('tc').textContent=c.tc; $('title').textContent=c.n+' · '+c.t; $('quote').textContent=c.q; $('file').textContent=c.f; $('tag').hidden=!c.alpha;
-  vid.loop=!$('auto').checked; vid.muted=!(c.full&&touched); vid.src=c.src; vid.play().catch(()=>{}); $('play').textContent='Pause'; $('snd').hidden=!c.full; $('snd').textContent=vid.muted?'Sound on':'Sound off';
+  vid.loop=!$('auto').checked; vid.muted=retry?muted:!(c.full&&(soundEnabled===null?touched:soundEnabled));
+  $('snd').hidden=!c.full; syncControls(); vid.src=c.src; vid.load(); requestPlay();
   list.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current',String(+b.dataset.i===cur)));
 }
 list.addEventListener('click',e=>{const b=e.target.closest('button[data-i]'); if(b) show(+b.dataset.i);});
-$('snd').onclick=()=>{vid.muted=!vid.muted;$('snd').textContent=vid.muted?'Sound on':'Sound off';};
+$('snd').onclick=()=>{vid.muted=!vid.muted;soundEnabled=!vid.muted;syncControls();};
 $('prev').onclick=()=>show(cur-1); $('next').onclick=()=>show(cur+1);
-$('play').onclick=()=>{if(vid.paused){vid.play();$('play').textContent='Pause';}else{vid.pause();$('play').textContent='Play';}};
-$('auto').onchange=()=>{vid.loop=!$('auto').checked; if($('auto').checked){vid.currentTime=0;vid.play();}};
-vid.addEventListener('ended',()=>{if($('auto').checked) show(cur+1);});
-document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return; if(e.key==='ArrowRight'){show(cur+1);e.preventDefault();} else if(e.key==='ArrowLeft'){show(cur-1);e.preventDefault();} else if(e.key===' '){$('play').click();e.preventDefault();}});
+$('play').onclick=()=>{if(vid.paused||vid.ended)requestPlay();else vid.pause();};
+$('auto').onchange=()=>{vid.loop=!$('auto').checked; if($('auto').checked){vid.currentTime=0;requestPlay();}};
+$('retry').onclick=()=>show(cur,true);
+vid.addEventListener('loadstart',()=>{if(currentSource()){mediaState='loading';syncControls();}});
+vid.addEventListener('canplay',()=>{if(currentSource()&&mediaState!=='error'){if(mediaState==='loading')mediaState='paused';syncControls();}});
+vid.addEventListener('playing',()=>{if(currentSource()&&!vid.error){mediaState='playing';clearStatus();syncControls();}});
+vid.addEventListener('pause',()=>{if(currentSource()&&mediaState!=='loading'&&mediaState!=='error'){mediaState='paused';syncControls();}});
+vid.addEventListener('ended',()=>{if(currentSource()&&mediaState!=='error'){mediaState='ended';syncControls();if($('auto').checked)show(cur+1);}});
+vid.addEventListener('error',()=>{
+  if(!currentSource()||!vid.error)return;
+  const message=vid.error.code===3?'This media file could not be decoded. Check the format, then retry.':vid.error.code===4?'This media file is missing or its format is unsupported. Check the file, then retry.':'This media file could not be loaded. Check the file path, then retry.';
+  failed(message);
+});
+document.addEventListener('keydown',e=>{
+  const target=e.target;
+  if(e.defaultPrevented||e.isComposing||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;
+  if(target instanceof Element&&(target.isContentEditable||target.closest('button,input,select,textarea,a[href],summary,audio[controls],video[controls],[role="button"],[role="checkbox"],[role="radio"],[role="switch"],[role="slider"],[role="spinbutton"],[role="textbox"],[role="combobox"],[role="listbox"],[role="menuitem"],[role="tab"]')))return;
+  if(e.key==='ArrowRight'){show(cur+1);e.preventDefault();} else if(e.key==='ArrowLeft'){show(cur-1);e.preventDefault();} else if(e.key===' '&&!$('play').disabled){$('play').click();e.preventDefault();}
+});
 show(0);
 </script>
 

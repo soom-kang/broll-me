@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -120,6 +121,79 @@ class PackageTests(SkillFixture, unittest.TestCase):
         self.write("SKILL.md", '---\nname: broll-me\ndescription: "Fixture"\nmodel: claude-example\n---\n')
         with self.assertRaisesRegex(ValueError, "Unsupported"):
             collect_files(self.skill)
+
+    def test_portable_scalar_strings_and_flat_metadata_remain_supported(self):
+        frontmatters = [
+            "name: broll-me\ndescription: Build palette-driven inserts. # comment\nlicense: MIT\nmetadata: {} # empty map",
+            "name: broll-me\ndescription: 'Build ''branded'' B-roll #1' # comment\nlicense: MIT\nmetadata:\n  owner: 'Scene team'\n  version: 1.25\n  enabled: true\n  optional: null\n  empty:\n  key_value: https://example.com:8443/demo#anchor",
+            'metadata:\n  owner: "Scene \\"team\\""\nname: broll-me\ndescription: "Build palette-driven inserts."\nlicense: MIT',
+        ]
+        for frontmatter in frontmatters:
+            with self.subTest(frontmatter=frontmatter):
+                self.write("SKILL.md", f"---\n{frontmatter}\n---\n")
+                self.assertIn("SKILL.md", collect_files(self.skill))
+
+    def test_malformed_frontmatter_cannot_publish_with_either_backend(self):
+        cases = [
+            "name: broll-me\ndescription: 'Build branded B-roll\nlicense: MIT",
+            "name: broll-me\nmetadata: {}\ndescription: Build B-roll\n  host_only: invalid nested scalar\nlicense: MIT",
+        ]
+        creator = self.root / "creator"
+        (creator / "scripts").mkdir(parents=True)
+        (creator / "scripts/package_skill.py").write_text("# Must not run for malformed input\n")
+        output = self.root / "dist"
+        output.mkdir()
+        previous = {name: ("previous " + name).encode() for name in
+                    ("broll-me.skill", "broll-me.zip", "package-manifest.json")}
+        for name, content in previous.items():
+            (output / name).write_bytes(content)
+        for frontmatter in cases:
+            for backend in (None, creator):
+                with self.subTest(frontmatter=frontmatter, creator=backend):
+                    self.write("SKILL.md", f"---\n{frontmatter}\n---\n")
+                    with mock.patch("package.importlib.util.find_spec", return_value=object()) as discovery, \
+                            mock.patch("package.subprocess.run") as run:
+                        with self.assertRaises(ValueError):
+                            build_package(self.skill, output, creator=backend)
+                        discovery.assert_not_called()
+                        run.assert_not_called()
+                    self.assertEqual({path.name: path.read_bytes() for path in output.iterdir()}, previous)
+                    absent = self.root / "not-created"
+                    with self.assertRaises(ValueError):
+                        build_package(self.skill, absent, creator=backend)
+                    self.assertFalse(absent.exists())
+
+    def test_portable_subset_rejects_ambiguous_types_and_unsupported_yaml(self):
+        invalid = [
+            "description: true", "description: null", "description: 42", "description: 2026-10-12",
+            "description: [Build, B-roll]", "description: {text: Build}", "description: |\n  Build B-roll",
+            "description: &shared Build B-roll", "description: *shared", "description: !!str Build B-roll",
+            "description: 'Build' trailing", 'description: "Build" trailing',
+            "description: Build: B-roll", "description: 'Build\tB-roll'",
+            "description: Build B-roll\ndescription: Other", "description: Build B-roll\nlicense: false",
+            "description: Build B-roll\nmetadata:\n  owner: Scene team\n  owner: Other team",
+            "description: Build B-roll\nmetadata:\n   owner: Scene team",
+            "description: Build B-roll\nmetadata:\n  owner:\n    team: Scene team",
+            "description: Build B-roll\nmetadata: {owner: Scene team}",
+            "description: Build B-roll\nmetadata:", "description: Build B-roll\nmetadata:\nlicense: MIT",
+            "description: Build B-roll\nmetadata: {}\n  owner: Scene team",
+            "description: Build B-roll\nmetadata:\n  true: invalid string key",
+            'description: "Build\\tB-roll"',
+            'description: "Build"\u00a0', "description: 'Build'\u2003", "description: 'Build'\u3000",
+            "description: Build B-roll\n\u2003", "description: Build B-roll\n\u3000# invalid comment indentation",
+            "description: Build B-roll\n\u00a0", "description: Build B-roll\n\u00a0# invalid comment indentation",
+            "description: Build B-roll\nmetadata: {}\u00a0",
+        ]
+        for fields in invalid:
+            with self.subTest(fields=fields):
+                self.write("SKILL.md", f"---\nname: broll-me\n{fields}\n---\n")
+                with self.assertRaises(ValueError):
+                    collect_files(self.skill)
+        for name in ("name:broll-me", "name: broll-me\u00a0"):
+            with self.subTest(name=name):
+                self.write("SKILL.md", f"---\n{name}\ndescription: Build B-roll\n---\n")
+                with self.assertRaises(ValueError):
+                    collect_files(self.skill)
 
 
 class InstallTests(SkillFixture, unittest.TestCase):

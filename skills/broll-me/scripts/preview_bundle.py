@@ -7,7 +7,7 @@ import tempfile
 
 from composite import create_preview
 from make_pages import write_pages
-from media import MediaError, input_file, load_plan
+from media import MediaError, validate_output_path, input_file, load_plan
 
 
 class RecoveryError(MediaError):
@@ -16,26 +16,20 @@ class RecoveryError(MediaError):
 
 def publish_bundle(stage, outdir, protected=()):
     files = sorted(path for path in stage.rglob("*") if path.is_file())
-    protected = {Path(path).resolve() for path in protected}
+    protected = tuple(protected)
     # Validate the entire destination set before moving any existing file.
     for source in files:
         destination = outdir / source.relative_to(stage)
-        if destination.resolve() in protected:
-            raise MediaError(f"Bundle output must not overwrite an input: {destination}")
-        for parent in (destination, *destination.parents):
-            if parent.is_symlink():
-                raise MediaError(f"Bundle output must not use a symlink: {parent}")
-            if parent == outdir:
-                break
-        if destination.exists() and not destination.is_file():
-            raise MediaError(f"Bundle output is not a regular file: {destination}")
+        validate_output_path(destination, inputs=protected)
         if source.relative_to(stage).parts[0] == "assets" and destination.exists() and destination.read_bytes() != source.read_bytes():
             raise MediaError(f"Bundle asset differs; use a new output directory: {destination}")
     journal = []
     try:
         for source in files:
             destination = outdir / source.relative_to(stage)
+            validate_output_path(destination, inputs=protected)
             destination.parent.mkdir(parents=True, exist_ok=True)
+            validate_output_path(destination, inputs=protected)
             backup = None
             if destination.exists():
                 backup = stage / ".previous" / source.relative_to(stage)
@@ -43,7 +37,7 @@ def publish_bundle(stage, outdir, protected=()):
                 os.replace(destination, backup)
             journal.append((destination, backup))
             os.replace(source, destination)
-    except OSError as error:
+    except (OSError, MediaError) as error:
         failures = []
         for destination, backup in reversed(journal):
             try:
@@ -63,10 +57,9 @@ def create_bundle(plan_path, output, font_mode="shared"):
     _, source, _, clips = load_plan(plan_path)
     output = Path(output).expanduser().absolute()
     protected = [plan_path, source, *(clip["path"] for clip in clips)]
+    validate_output_path(output, inputs=protected)
     if output.suffix.lower() != ".mp4":
         raise MediaError("Output must end with .mp4")
-    if output.resolve() in protected:
-        raise MediaError("Output must not overwrite an input file")
     outdir = output.parent
     outdir.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix=".broll-preview-", dir=outdir.parent))

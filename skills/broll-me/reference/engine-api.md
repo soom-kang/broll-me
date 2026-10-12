@@ -74,16 +74,33 @@ Final resources must not depend on `works/`. Report a resource that cannot be ve
 |---|---|
 | `M.track(v0, [[t, value, spring?], …])` | A value that changes target many times: the sum of one closed-form spring per change. Returns `t => value`. |
 | `M.ctrack('#hex', [[t,'#hex'], …])` | The same for colours. Returns `t => 'rgb(...)'`. |
-| `M.MORPH`, `M.FAST`, `M.SLOW`, `M.SOFT`, `M.CAM`, `M.INSTANT` | Spring presets `[stiffness ω, damping ζ]`. FAST/SLOW for leading/trailing edges; INSTANT for invisible resets. |
+| `M.MORPH`, `M.FAST`, `M.SLOW`, `M.SOFT`, `M.CAM`, `M.INSTANT` | Spring presets `[response frequency ω, damping ratio ζ]`. FAST/SLOW for leading/trailing edges; INSTANT for invisible resets. |
 | `M.vis(t, tin, tout, {din, lin, lout})` | Content swap: exit blurs out fast, enter waits `din` then blurs in over `lin`. Returns `{o, blur, s, a, b}`. |
 | `M.apply(el, v)` | Applies a `vis` result to an element (opacity, blur, scale). |
 | `M.path([[t,x,y], …])` | Cursor or any point path, eased between keys with a slight human arc. |
 | `M.crossTimes(f, t0, t1, thresholds)` | When a rising value first crosses each threshold. Use it to trigger springs from a dragged value. |
 | `M.icon(name, size, colour, strokeW?)` | Icon from the set in `M.IC`, with stroke normalised so all icons match. |
 | `M.setText(el, s)` | Set text only when it changed (cheap per frame). |
-| `M.eo`, `M.eio`, `M.clamp`, `M.lerp`, `M.S` | Easing and spring helpers. |
+| `M.S(tau, w, z)` | Unit spring step response from 0 to 1 with zero initial velocity; see [custom springs](#custom-springs). |
+| `M.eo`, `M.eio`, `M.clamp`, `M.lerp` | Easing and interpolation helpers. |
 
 Icons in `M.IC`: arrow, check, x, plus, folder, terminal, file, pencil, coin, clock, chip, sparkle, castle, search. Add more as 24-grid stroke paths (e.g. from Lucide, ISC licence).
+
+## Custom springs
+
+Spring arrays remain `[w, z]`. Use them in `M.scene`'s `spring` and `camSpring`, in individual `M.track` / `M.ctrack` keys, or as either track's default spring. Custom scene configuration accepts finite positive `w` or `Infinity`, with finite non-negative `z`; these inputs and the built-in presets are unchanged. The validator calls `w` "stiffness"; in `M.S(tau, w, z)`, it is the response frequency ω and `z` is the damping ratio ζ.
+
+`tau` is elapsed time in seconds since the target changed. `M.S` returns `0` for `tau <= 0`. With `w === Infinity`, it returns `1` for positive time, preserving instant transitions.
+
+| Damping ratio | Response to one step |
+| --- | --- |
+| `0 <= z < 1` | Underdamped; may overshoot. At `z === 0`, oscillation does not decay. |
+| `z === 1` | Critically damped; approaches 1 without overshoot. |
+| `z > 1` | Overdamped; approaches 1 monotonically. Increasing `z` at fixed `w` slows settling. |
+
+For example, `M.S(1, 1, 2)` is approximately `0.17773657609819048`; `M.S(1, 1, 1)` is approximately `0.26424111765711533`. The overdamped calculation uses normalized decaying roots, `Math.expm1` and small-value series to reduce cancellation near critical damping and intermediate overflow for large finite inputs.
+
+No fragment input migration is needed. The earlier implementation treated every `z > 1` as critical damping. Those fragments now use their authored damping and can settle more slowly; re-preview them and check their timing, especially long settling scenes. Responses with `z <= 1` and built-in preset values retain their existing behavior.
 
 ## Patterns (see `examples/opus-aoe2/`)
 

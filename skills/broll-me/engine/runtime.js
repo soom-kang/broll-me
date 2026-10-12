@@ -36,11 +36,28 @@ function inputFile(value) {
   return fs.realpathSync(value);
 }
 
-function outputFile(value, extension, inputs = []) {
+function validateOutputPath(value, extension, inputs = []) {
   if (!value || path.extname(value).toLowerCase() !== extension) throw new Error(`Output must end with ${extension}`);
   const output = path.resolve(value);
-  const existing = fs.existsSync(output) ? fs.realpathSync(output) : output;
-  if (inputs.includes(existing)) throw new Error('Output must not overwrite an input');
+  let identity;
+  try { identity = fs.statSync(output, { bigint: true }); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (identity && !identity.isFile()) throw new Error(`Output must be a regular file: ${output}`);
+  const existing = identity ? fs.realpathSync(output) : output;
+  for (const input of inputs) {
+    if (existing === path.resolve(input)) throw new Error('Output must not overwrite an input');
+    if (identity) {
+      const protectedIdentity = fs.statSync(input, { bigint: true });
+      if (identity.dev === protectedIdentity.dev && identity.ino === protectedIdentity.ino) {
+        throw new Error('Output must not overwrite an input');
+      }
+    }
+  }
+  return output;
+}
+
+function outputFile(value, extension, inputs = []) {
+  const output = validateOutputPath(value, extension, inputs);
   fs.mkdirSync(path.dirname(output), { recursive: true });
   return output;
 }
@@ -59,10 +76,15 @@ function playwright() {
   catch (error) { throw new Error(`Playwright is unavailable. Run setup.sh, then set BROLL_RUNTIME or NODE_PATH. ${error.message}`); }
 }
 
-async function openScene(html) {
+async function openScene(html, { signal } = {}) {
   const { chromium } = playwright();
-  const browser = await chromium.launch({ ...(process.env.BROLL_CHROMIUM ? { executablePath: process.env.BROLL_CHROMIUM } : {}) });
+  let browser;
+  const cancel = () => { if (browser) browser.close().catch(() => {}); };
+  signal?.throwIfAborted();
+  signal?.addEventListener('abort', cancel, { once: true });
   try {
+    browser = await chromium.launch({ ...(process.env.BROLL_CHROMIUM ? { executablePath: process.env.BROLL_CHROMIUM } : {}) });
+    signal?.throwIfAborted();
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     page.setDefaultTimeout(30000);
     const errors = [];
@@ -84,8 +106,18 @@ async function openScene(html) {
     }));
     await page.setViewportSize({ width: info.W, height: info.H });
     const keyTimes = await page.evaluate(() => window.BROLL_KEY_TIMES || []);
+    signal?.throwIfAborted();
     return { browser, page, info, errors, keyTimes };
-  } catch (error) { await browser.close(); throw error; }
+  } catch (error) {
+    try { if (browser) await browser.close(); }
+    catch (cleanupError) {
+      const failure = new Error(`Browser cleanup failed while opening scene: ${cleanupError.message}`, { cause: error });
+      failure.cleanupFailed = true;
+      throw failure;
+    }
+    signal?.throwIfAborted();
+    throw error;
+  } finally { signal?.removeEventListener('abort', cancel); }
 }
 
 function encoder(args) {
@@ -133,4 +165,4 @@ function encoder(args) {
   };
 }
 
-module.exports = { frameRate, validateScene, inputFile, outputFile, timeoutMs, openScene, encoder };
+module.exports = { frameRate, validateScene, inputFile, validateOutputPath, outputFile, timeoutMs, openScene, encoder };

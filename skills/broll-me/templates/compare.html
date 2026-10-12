@@ -14,7 +14,7 @@ h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em;text-wrap:balan
 .seg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
 .seg button{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:transparent;border:0;border-radius:9px;padding:6px 13px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:focus-visible,input:focus-visible,.track:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .views{display:grid;gap:14px}
 .views.side{grid-template-columns:1fr 1fr}
 .views.stack{grid-template-columns:minmax(0,960px);justify-content:center}
@@ -37,6 +37,11 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
 .btn{font:inherit;font-size:14px;font-weight:500;color:var(--bg);background:var(--ink);border:0;border-radius:10px;padding:8px 16px;cursor:pointer;min-width:84px}
 .btn.ghost{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:default}
+.media-status{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.media-status p{margin:0}
+#failed-source{font-family:var(--mono);font-size:12.5px;white-space:pre-wrap}
+.track[aria-disabled="true"]{opacity:.5;cursor:default}
 .time{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .now{font-size:14px;font-weight:500}
 .now b{color:var(--acc);font-weight:600}
@@ -79,11 +84,15 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block}
       <span class="time" id="time">0:00.0</span>
       <span class="now" id="now">Speaker only</span>
     </div>
+    <div class="media-status" id="media-status" role="status" aria-live="polite" hidden>
+      <p id="media-message"></p><p id="failed-source"></p>
+      <button class="btn ghost" id="retry" type="button" hidden>Retry media</button>
+    </div>
     <div class="track" id="track" role="slider" aria-label="Seek" tabindex="0" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
       <div class="rail"></div><div class="fill" id="fill"></div><div id="marks"></div><div class="knob" id="knob"></div>
     </div>
   </div>
-  <p class="foot">Orange blocks on the timeline are where an animation is on screen. Click one to jump to it. Arrow keys skip 2 seconds, space plays and pauses.</p>
+  <p class="foot">Orange blocks on the timeline are where an animation is on screen. Click one to jump to it. Arrow keys skip 2 seconds; space plays and pauses when no control is focused. On the seek slider, arrow keys skip 2 seconds.</p>
 </div>
 
 <script>
@@ -94,41 +103,99 @@ const views=$('views'); let mode='side';
 const master=()=>mode==='wipe-mode'?$('wTop'):$('vB');
 const followers=()=>mode==='wipe-mode'?[$('wBot')]:[$('vA')];
 const all=['vA','vB','wBot','wTop'].map($);
+const active=()=>[master(),...followers()];
+const failures=new Map(), loading=new Set(all.filter(v=>v.readyState<2)), playing=new Set(), retryTimes=new Map();
+let playEpoch=0, playPending=false, playbackIssue='', reviewTime=0;
+const available=()=>active().every(v=>!failures.has(v)&&!v.error&&!loading.has(v)&&v.readyState>=2);
+function mediaStatus(){
+  const pair=active(), failed=pair.filter(v=>failures.has(v)||v.error);
+  const pending=!failed.length&&!available();
+  $('play').textContent=pair.every(v=>playing.has(v)&&!v.paused)?'Pause':'Play';
+  $('play').disabled=!!failed.length||pending;
+  $('snd').disabled=!!failed.length||pending;
+  $('track').setAttribute('aria-disabled',String(!!failed.length||pending));
+  $('media-status').hidden=!failed.length&&!pending&&!playbackIssue;
+  $('media-message').textContent=failed.length?'Media unavailable. Restore the files, then retry.':pending?'Loading media…':playbackIssue;
+  $('failed-source').textContent=[...new Set(failed.map(v=>v.getAttribute('src')||'(no source)'))].join('\n');
+  $('retry').hidden=!failed.length;
+}
+function pauseAll(){playEpoch++;playPending=false;all.forEach(v=>v.pause());mediaStatus();}
+function markLoading(v,reset=false){
+  loading.add(v);playing.delete(v);if(reset)failures.delete(v);
+  if(active().includes(v)){
+    const m=master(), t=retryTimes.has(m)?retryTimes.get(m):m.currentTime;
+    pauseAll();
+    for(const f of followers()){if(!retryTimes.has(f)&&Math.abs(f.currentTime-t)>0.08){try{f.currentTime=t}catch(e){}}}
+    paint(t);
+  }else mediaStatus();
+}
 for(const [i,c] of CL.entries()){const mark=document.createElement('div');mark.className='mk';mark.dataset.i=String(i);mark.style.left=(c[0]/D*100)+'%';mark.style.width=((c[1]-c[0])/D*100)+'%';mark.textContent=c[2];$('marks').append(mark);}
 function fmt(t){const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1);}
-function seek(t){t=Math.max(0,Math.min(D-0.05,t));all.forEach(v=>{try{v.currentTime=t}catch(e){}});paint(t);}
+function seek(t){t=Math.max(0,Math.min(Math.max(0,D-0.05),t));all.forEach(v=>{try{v.currentTime=t}catch(e){}});paint(t);}
 function paint(t){
+  reviewTime=t;
   $('fill').style.width=(t/D*100)+'%';$('knob').style.left=(t/D*100)+'%';$('time').textContent=fmt(t)+' / '+fmt(D);$('track').setAttribute('aria-valuenow',t.toFixed(1));
   const c=CL.findIndex(c=>t>=c[0]&&t<c[1]);const now=$('now');now.replaceChildren();if(c<0){now.textContent='Speaker only';}else{const label=document.createElement('b');label.textContent=CL[c][2];now.append(label,document.createTextNode(' · '+CL[c][3]));}
   document.querySelectorAll('.mk').forEach(m=>m.classList.toggle('on',+m.dataset.i===c));
 }
-function tick(){const m=master();const t=m.currentTime;for(const f of followers()){if(Math.abs(f.currentTime-t)>0.08){try{f.currentTime=t}catch(e){}} if(m.paused!==f.paused){m.paused?f.pause():f.play().catch(()=>{});}}paint(t);requestAnimationFrame(tick);}
+function tick(){const m=master();const t=m.currentTime;if(available()){for(const f of followers()){if(Math.abs(f.currentTime-t)>0.08){try{f.currentTime=t}catch(e){}}}paint(t);}requestAnimationFrame(tick);}
 requestAnimationFrame(tick);
-function setPlay(p){const m=master();if(p){m.play().catch(()=>{});followers().forEach(f=>f.play().catch(()=>{}));}else{all.forEach(v=>v.pause());}$('play').textContent=p?'Pause':'Play';}
+function setPlay(p){
+  if(!p){pauseAll();return;}
+  if(!available())return;
+  const epoch=++playEpoch, pair=active();playPending=true;playbackIssue='';mediaStatus();
+  Promise.allSettled(pair.map(async v=>{
+    try{await v.play();}
+    catch(error){
+      if(epoch!==playEpoch||error.name==='AbortError')return;
+      if(error.name==='NotAllowedError')playbackIssue='Playback was blocked. Press Play to try again.';
+      else failures.set(v,error.message||'Playback failed');
+      pauseAll();
+    }
+  })).then(()=>{if(epoch===playEpoch){playPending=false;mediaStatus();}});
+}
 $('play').onclick=()=>setPlay(master().paused);
-master().addEventListener('ended',()=>setPlay(false));
-all.forEach(v=>v.addEventListener('ended',()=>{if(v===master()){setPlay(false);seek(0);}}));
+for(const v of all){
+  for(const name of ['loadstart','emptied'])v.addEventListener(name,()=>markLoading(v,true));
+  v.addEventListener('loadedmetadata',()=>{if(retryTimes.has(v)){try{v.currentTime=retryTimes.get(v);}catch(e){}retryTimes.delete(v);}mediaStatus();});
+  for(const name of ['loadeddata','canplay'])v.addEventListener(name,()=>{if(v.readyState>=2)loading.delete(v);mediaStatus();});
+  v.addEventListener('waiting',()=>markLoading(v));
+  v.addEventListener('play',()=>mediaStatus());
+  v.addEventListener('playing',()=>{if(!v.paused){loading.delete(v);playing.add(v);}mediaStatus();});
+  v.addEventListener('pause',()=>{if(!v.paused)return;playing.delete(v);if(active().includes(v)&&!playPending)active().forEach(f=>{if(!f.paused)f.pause();});mediaStatus();});
+  v.addEventListener('error',()=>{failures.set(v,'Media unavailable');loading.delete(v);playing.delete(v);if(active().includes(v))pauseAll();else mediaStatus();});
+  v.addEventListener('ended',()=>{playing.delete(v);if(v===master()){pauseAll();if(available())seek(0);}mediaStatus();});
+}
+$('retry').onclick=()=>{
+  const t=reviewTime;pauseAll();playbackIssue='';
+  for(const v of active()){failures.delete(v);loading.add(v);playing.delete(v);retryTimes.set(v,t);v.load();}
+  mediaStatus();
+};
 let sound=false;function applySound(){all.forEach(v=>v.muted=true);master().muted=!sound;$('snd').textContent=sound?'Sound off':'Sound on';}
 $('snd').onclick=()=>{sound=!sound;applySound();};
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
-  const t=master().currentTime, playing=!master().paused; all.forEach(v=>v.pause());
+  const t=reviewTime, wasPlaying=active().every(v=>playing.has(v)&&!v.paused);pauseAll();
   mode=b.dataset.mode; views.className='views '+mode; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-  seek(t); applySound(); if(playing) setPlay(true);
+  playbackIssue='';seek(t);applySound();mediaStatus();if(wasPlaying&&available())setPlay(true);
 });
 // scrubbing
 const tr=$('track');let drag=false;
+tr.setAttribute('aria-valuemax',String(D));
 const tAt=e=>{const r=tr.getBoundingClientRect();return (e.clientX-r.left)/r.width*D;};
-tr.addEventListener('pointerdown',e=>{const mk=e.target.closest('.mk');if(mk){seek(CL[+mk.dataset.i][0]+0.05);return;}drag=true;tr.setPointerCapture(e.pointerId);seek(tAt(e));});
-tr.addEventListener('pointermove',e=>{if(drag)seek(tAt(e));});
+tr.addEventListener('pointerdown',e=>{if(!available())return;const mk=e.target.closest('.mk');if(mk){seek(CL[+mk.dataset.i][0]+0.05);return;}drag=true;tr.setPointerCapture(e.pointerId);seek(tAt(e));});
+tr.addEventListener('pointermove',e=>{if(drag&&available())seek(tAt(e));});
 tr.addEventListener('pointerup',()=>drag=false);
-document.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();$('play').click();}else if(e.key==='ArrowRight'){seek(master().currentTime+2);}else if(e.key==='ArrowLeft'){seek(master().currentTime-2);}});
+function shortcutEvent(e){return !e.defaultPrevented&&!e.isComposing&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey;}
+function controlTarget(target){return target instanceof Element&&(target.isContentEditable||!!target.closest('button,input,select,textarea,a[href],summary,audio[controls],video[controls],[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="textbox"],[role="combobox"],[role="slider"],[role="spinbutton"],[contenteditable]:not([contenteditable="false"])'));}
+tr.addEventListener('keydown',e=>{if(!shortcutEvent(e)||(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'))return;e.preventDefault();if(available())seek(master().currentTime+(e.key==='ArrowRight'?2:-2));});
+document.addEventListener('keydown',e=>{if(!shortcutEvent(e)||controlTarget(e.target))return;if(e.key===' '){e.preventDefault();$('play').click();}else if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();if(available())seek(master().currentTime+(e.key==='ArrowRight'?2:-2));}});
 // wipe
 const ws=$('wScreen');let wd=false;
 function setWipe(e){const r=ws.getBoundingClientRect();const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));$('wTop').style.clipPath=`inset(0 0 0 ${p*100}%)`;$('handle').style.left=(p*100)+'%';}
 ws.addEventListener('pointerdown',e=>{wd=true;ws.setPointerCapture(e.pointerId);setWipe(e);});
 ws.addEventListener('pointermove',e=>{if(wd)setWipe(e);});
 ws.addEventListener('pointerup',()=>wd=false);
-applySound();paint(0);
+applySound();paint(0);mediaStatus();
 </script>
 
 </html>

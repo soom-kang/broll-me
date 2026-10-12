@@ -68,6 +68,7 @@ Keep each HTML bundle with its assets. See [delivery details](skills/broll-me/re
 - [Examples](docs/onnimm-demo.md) · [Reproduce the pink card sample](docs/pink-demo.md)
 - [Troubleshooting](skills/broll-me/reference/troubleshooting.md)
 - [Contributing and verification](CONTRIBUTING.md)
+- [Current checkout QA, 2026-10-12](reports/QA-2026-10-12.md): findings, local JIRA-style tickets and verification limits
 
 ## Scope and limitations
 

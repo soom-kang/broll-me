@@ -6,10 +6,13 @@ import argparse
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 
 SKILL = Path(__file__).resolve().parents[1]
+TIMEOUT_CLEANUP_GRACE_SECONDS = 5
+TIMEOUT_REAP_SECONDS = 1
 
 
 class CommandFailure(Exception):
@@ -36,24 +39,98 @@ def runtime_environment(runtime):
     return environment
 
 
+def timeout_output(error):
+    """TimeoutExpired may retain bytes even when Popen uses text mode."""
+    def decoded(value):
+        return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else (value or '')
+    return decoded(error.output), decoded(error.stderr)
+
+
+def cancel_timed_out(process, *, owns_process_group):
+    """Offer cleanup time, then contain descendants and bound pipe draining."""
+    print(f'Timeout: requesting child cleanup; grace {TIMEOUT_CLEANUP_GRACE_SECONDS:g}s', file=sys.stderr)
+    try:
+        process.terminate()
+    except ProcessLookupError:
+        pass
+    except OSError as error:
+        print(f'Timeout: cleanup signal failed: {error}', file=sys.stderr)
+    try:
+        output = process.communicate(timeout=TIMEOUT_CLEANUP_GRACE_SECONDS)
+    except subprocess.TimeoutExpired as error:
+        output = timeout_output(error)
+    # The direct child may have exited while descendants still hold its pipes
+    # or run with their own output redirected. Only our isolated group is owned.
+    if owns_process_group:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+            print('Timeout: SIGKILL sent to owned process group; cleanup may be incomplete', file=sys.stderr)
+        except ProcessLookupError:
+            pass
+        except OSError as error:
+            print(f'Timeout: owned process group could not be terminated: {error}', file=sys.stderr)
+            if process.poll() is None:
+                try:
+                    process.kill()
+                except OSError as child_error:
+                    print(f'Timeout: child termination also failed: {child_error}', file=sys.stderr)
+    elif process.poll() is None:
+        try:
+            process.kill()
+        except OSError as error:
+            print(f'Timeout: child could not be terminated: {error}', file=sys.stderr)
+        print('Timeout: child forcibly terminated; descendant cleanup is not guaranteed on this platform', file=sys.stderr)
+    try:
+        return process.communicate(timeout=TIMEOUT_REAP_SECONDS)
+    except subprocess.TimeoutExpired as error:
+        output = timeout_output(error)
+        print('Timeout: diagnostic pipes did not close; capture stopped with cleanup unconfirmed', file=sys.stderr)
+        if owns_process_group:
+            for stream in (process.stdout, process.stderr):
+                if stream:
+                    stream.close()
+        # Windows communicate() can leave daemon pipe-reader threads blocked
+        # in buffered reads. Synchronously closing their streams would wait for
+        # those reads; retain their ownership and return the bounded failure.
+        try:
+            process.wait(timeout=TIMEOUT_REAP_SECONDS)
+        except subprocess.TimeoutExpired:
+            print('Timeout: child exit could not be confirmed within the reap deadline', file=sys.stderr)
+        return output
+
+
+def child_diagnostics(stdout, stderr, *, log_stdout):
+    if stderr:
+        print(stderr.rstrip(), file=sys.stderr)
+    if log_stdout and stdout:
+        print(stdout.rstrip(), file=sys.stderr)
+
+
 def execute(command, environment, *, log_stdout=True):
     try:
         timeout = int(environment.get('BROLL_TIMEOUT_MS', '600000')) / 1000
         if timeout < 1:
             raise ValueError('BROLL_TIMEOUT_MS must be at least 1000')
-        result = subprocess.run(list(map(str, command)), env=environment,
-                                capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired as error:
-        raise CommandFailure(f'{Path(str(command[0])).name} timed out after {timeout:g}s', 124) from error
+        owns_process_group = os.name == 'posix'
+        process = subprocess.Popen(list(map(str, command)), env=environment,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   text=True, start_new_session=owns_process_group)
     except (OSError, ValueError) as error:
         raise CommandFailure(str(error)) from error
-    if result.stderr:
-        print(result.stderr.rstrip(), file=sys.stderr)
-    if log_stdout and result.stdout:
-        print(result.stdout.rstrip(), file=sys.stderr)
-    if result.returncode:
-        raise CommandFailure((result.stderr or result.stdout or 'Command failed').strip()[-4000:], result.returncode)
-    return result.stdout
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        stdout, stderr = cancel_timed_out(process, owns_process_group=owns_process_group)
+        child_diagnostics(stdout, stderr, log_stdout=True)
+        details = stderr.strip()[-4000:]
+        message = f'{Path(str(command[0])).name} timed out after {timeout:g}s'
+        if details:
+            message += '\n' + details
+        raise CommandFailure(message, 124) from error
+    child_diagnostics(stdout, stderr, log_stdout=log_stdout)
+    if process.returncode:
+        raise CommandFailure((stderr or stdout or 'Command failed').strip()[-4000:], process.returncode)
+    return stdout
 
 
 def parsed_output(text):

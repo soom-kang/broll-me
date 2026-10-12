@@ -90,6 +90,115 @@ test('output container and source overwrite are rejected', () => {
   } finally { fs.rmSync(directory, { recursive: true }); }
 });
 
+test('beats rejects a distinct protected-input hardlink before browser or output writes', async () => {
+  const { beats } = require('../skills/broll-me/engine/beats');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-beats-hardlink-test-'));
+  const source = path.join(directory, 'scene.html'), output = path.join(directory, 'sheet.png');
+  const previous = { openScene: R.openScene, encoder: R.encoder };
+  try {
+    fs.writeFileSync(source, '<html>protected scene fixture</html>');
+    fs.linkSync(source, output);
+    assert.notEqual(fs.realpathSync(source), fs.realpathSync(output));
+    let opened = 0, encoded = 0;
+    R.openScene = async () => { opened++; throw new Error('browser must not start'); };
+    R.encoder = () => { encoded++; throw new Error('encoder must not start'); };
+    assert.throws(() => R.validateOutputPath(output, '.png', [source]), /overwrite/);
+    assert.throws(() => R.outputFile(output, '.png', [source]), /overwrite/);
+    await assert.rejects(beats(source, output, ['0']), /overwrite/);
+    assert.equal(opened, 0); assert.equal(encoded, 0);
+    assert.equal(fs.readFileSync(source, 'utf8'), '<html>protected scene fixture</html>');
+    assert.equal(fs.readFileSync(output, 'utf8'), '<html>protected scene fixture</html>');
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['scene.html', 'sheet.png']);
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('beats accepts readable input symlinks and publishes after cleanup without truncating prior hardlinks', async () => {
+  const { beats } = require('../skills/broll-me/engine/beats');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-beats-publish-test-'));
+  const source = path.join(directory, 'scene.html'), input = path.join(directory, 'input-link.html');
+  const output = path.join(directory, 'sheet.png'), observer = path.join(directory, 'prior-sheet.png');
+  const previous = { openScene: R.openScene, encoder: R.encoder, log: console.log };
+  try {
+    fs.writeFileSync(source, 'protected scene'); fs.symlinkSync(source, input);
+    fs.writeFileSync(output, 'previous approved sheet'); fs.linkSync(output, observer);
+    let closed = 0, stopped = 0, command, result;
+    console.log = value => { result = JSON.parse(value); };
+    R.openScene = async html => {
+      assert.equal(html, fs.realpathSync(source));
+      return { info: { T: 1, W: 640, H: 360, alpha: false }, errors: [],
+        page: { evaluate: async () => {}, screenshot: async options => fs.writeFileSync(options.path, 'frame') },
+        browser: { close: async () => { closed++; assert.equal(fs.readFileSync(output, 'utf8'), 'previous approved sheet'); } } };
+    };
+    R.encoder = args => {
+      command = args;
+      assert.equal(path.dirname(path.dirname(args.at(-1))), path.dirname(output), 'stage stays on the publication filesystem');
+      return { finish: async () => fs.writeFileSync(args.at(-1), 'new captured sheet'),
+        stop: async () => { stopped++; assert.equal(fs.readFileSync(output, 'utf8'), 'previous approved sheet'); } };
+    };
+    await beats(input, output, ['0', '1']);
+    assert.equal(result.status, 'captured'); assert.deepEqual(result.times, [0, 1]);
+    assert.equal(command[command.indexOf('-vf') + 1], 'tile=2x1:padding=4:color=white');
+    assert.equal(closed, 1); assert.equal(stopped, 1);
+    assert.equal(fs.readFileSync(source, 'utf8'), 'protected scene');
+    assert.equal(fs.readFileSync(output, 'utf8'), 'new captured sheet');
+    assert.equal(fs.readFileSync(observer, 'utf8'), 'previous approved sheet');
+    assert.notEqual(fs.statSync(output).ino, fs.statSync(observer).ino);
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['input-link.html', 'prior-sheet.png', 'scene.html', 'sheet.png']);
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('beats rechecks protected-input identity after cleanup before publication', async () => {
+  const { beats } = require('../skills/broll-me/engine/beats');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-beats-late-alias-test-'));
+  const source = path.join(directory, 'scene.html'), output = path.join(directory, 'sheet.png');
+  const observer = path.join(directory, 'prior-sheet.png');
+  const previous = { openScene: R.openScene, encoder: R.encoder, log: console.log };
+  try {
+    fs.writeFileSync(source, 'protected scene'); fs.writeFileSync(output, 'previous approved sheet'); fs.linkSync(output, observer);
+    let closed = 0, stopped = 0, reported = false;
+    console.log = () => { reported = true; };
+    R.openScene = async () => ({ info: { T: 1, W: 640, H: 360, alpha: false }, errors: [],
+      page: { evaluate: async () => {}, screenshot: async options => fs.writeFileSync(options.path, 'frame') },
+      browser: { close: async () => { closed++; fs.unlinkSync(output); fs.linkSync(source, output); } } });
+    R.encoder = args => ({ finish: async () => fs.writeFileSync(args.at(-1), 'new captured sheet'), stop: async () => { stopped++; } });
+    await assert.rejects(beats(source, output, ['0']), /overwrite/);
+    assert.equal(closed, 1); assert.equal(stopped, 1); assert.equal(reported, false);
+    assert.equal(fs.readFileSync(source, 'utf8'), 'protected scene');
+    assert.equal(fs.readFileSync(output, 'utf8'), 'protected scene');
+    assert.equal(fs.readFileSync(observer, 'utf8'), 'previous approved sheet');
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['prior-sheet.png', 'scene.html', 'sheet.png']);
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('beats capture, encoder and cleanup failures preserve prior output and attempt resource cleanup', async () => {
+  const { beats } = require('../skills/broll-me/engine/beats');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-beats-failure-test-'));
+  const source = path.join(directory, 'scene.html'), output = path.join(directory, 'sheet.png');
+  const previous = { openScene: R.openScene, encoder: R.encoder, log: console.log };
+  try {
+    fs.writeFileSync(source, 'protected scene');
+    console.log = () => { throw new Error('failed capture must not report success'); };
+    for (const phase of ['capture', 'encoder', 'encoder cleanup', 'browser cleanup']) {
+      fs.writeFileSync(output, 'previous approved sheet');
+      let closed = 0, stopped = 0;
+      R.openScene = async () => ({ info: { T: 1, W: 640, H: 360, alpha: false }, errors: [],
+        page: { evaluate: async () => {}, screenshot: async options => {
+          if (phase === 'capture') throw new Error(`${phase} fixture failure`);
+          fs.writeFileSync(options.path, 'frame');
+        } }, browser: { close: async () => { closed++; if (phase === 'browser cleanup') throw new Error(`${phase} fixture failure`); } } });
+      R.encoder = args => ({ finish: async () => {
+        if (phase === 'encoder') throw new Error(`${phase} fixture failure`);
+        fs.writeFileSync(args.at(-1), 'new captured sheet');
+      }, stop: async () => { stopped++; if (phase === 'encoder cleanup') throw new Error(`${phase} fixture failure`); } });
+      await assert.rejects(beats(source, output, ['0']), error => error.message.includes(`${phase} fixture failure`));
+      assert.equal(closed, 1, phase); assert.equal(stopped, phase === 'capture' ? 0 : 1, phase);
+      assert.equal(fs.readFileSync(source, 'utf8'), 'protected scene', phase);
+      assert.equal(fs.readFileSync(output, 'utf8'), 'previous approved sheet', phase);
+      assert.deepEqual(fs.readdirSync(directory).sort(), ['scene.html', 'sheet.png'], phase);
+    }
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; fs.rmSync(directory, { recursive: true }); }
+});
+
 test('failed encoder is a failed run instead of a success status', async () => {
   const previous = process.env.BROLL_FFMPEG;
   process.env.BROLL_FFMPEG = process.execPath;
@@ -207,8 +316,129 @@ test('draft and default final retain FPS, frame count, codecs and alpha with few
       assert.deepEqual(codec(runs[0]), codec(runs[1]));
       assert.match(runs[0][runs[0].indexOf('-vf') + 1], /tmix=frames=4/);
       assert.doesNotMatch(runs[1][runs[1].indexOf('-vf') + 1], /tmix/);
+      if (alpha) {
+        assert.match(runs[0][runs[0].indexOf('-vf') + 1], /premultiply=inplace=1.*tmix.*unpremultiply=inplace=1/);
+        assert.equal(runs[0][runs[0].indexOf('-reinit_filter') + 1], '0');
+        assert.equal(runs[1].includes('-reinit_filter'), false);
+      }
+      else assert.doesNotMatch(runs[0][runs[0].indexOf('-vf') + 1], /premultiply/);
     }
   } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('render cancellation during capture or cleanup retains prior output and releases resources', async () => {
+  const { render } = require('../skills/broll-me/engine/render');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-cancel-test-'));
+  const source = path.join(directory, 'scene.html'), output = path.join(directory, 'scene.mp4');
+  fs.writeFileSync(source, 'source fixture');
+  const previous = { openScene: R.openScene, encoder: R.encoder, log: console.log, error: console.error };
+  const termListeners = process.listenerCount('SIGTERM'), intListeners = process.listenerCount('SIGINT');
+  try {
+    console.log = console.error = () => {};
+    for (const phase of ['capture', 'cleanup']) {
+      fs.writeFileSync(output, 'previous approved output');
+      let closed = false, stopped = false;
+      R.openScene = async () => ({ info: { T: 0.1, W: 640, H: 360, alpha: false }, errors: [],
+        page: { evaluate: async () => {}, screenshot: async () => {
+          if (phase === 'capture') { process.emit('SIGTERM'); return new Promise(() => {}); }
+          return Buffer.from('frame');
+        } }, browser: { close: async () => { closed = true; if (phase === 'cleanup') process.emit('SIGTERM'); } } });
+      R.encoder = args => ({ write: async () => {}, finish: async () => fs.writeFileSync(args.at(-1), 'new video'), stop: async () => { stopped = true; } });
+      await assert.rejects(render(source, output, '30'), error => error.exitCode === 124 && /SIGTERM/.test(error.message));
+      assert.equal(closed, true); assert.equal(stopped, true);
+      assert.equal(fs.readFileSync(output, 'utf8'), 'previous approved output');
+      assert.deepEqual(fs.readdirSync(directory).sort(), ['scene.html', 'scene.mp4']);
+      assert.equal(process.listenerCount('SIGTERM'), termListeners);
+      assert.equal(process.listenerCount('SIGINT'), intListeners);
+    }
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; console.error = previous.error; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('cleanup failures attempt remaining resources and do not report successful cancellation cleanup', async () => {
+  const { render } = require('../skills/broll-me/engine/render');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-cleanup-test-'));
+  const source = path.join(directory, 'scene.html'), output = path.join(directory, 'scene.mp4');
+  fs.writeFileSync(source, 'source fixture'); fs.writeFileSync(output, 'previous approved output');
+  const previous = { openScene: R.openScene, encoder: R.encoder, log: console.log, error: console.error };
+  try {
+    const diagnostics = []; let closed = false;
+    console.log = () => {}; console.error = message => diagnostics.push(message);
+    R.openScene = async () => ({ info: { T: 0.1, W: 640, H: 360, alpha: false }, errors: [],
+      page: { evaluate: async () => {}, screenshot: async () => { process.emit('SIGTERM'); return new Promise(() => {}); } },
+      browser: { close: async () => { closed = true; } } });
+    R.encoder = () => ({ write: async () => {}, finish: async () => {}, stop: async () => { throw new Error('encoder close failure'); } });
+    await assert.rejects(render(source, output, '30'), error => error.exitCode === 124 && /Render cleanup failed.*encoder close failure/.test(error.message));
+    assert.equal(closed, true);
+    assert.equal(diagnostics.some(message => message.includes('cleanup completed')), false);
+    assert.equal(fs.readFileSync(output, 'utf8'), 'previous approved output');
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['scene.html', 'scene.mp4']);
+    R.openScene = async () => {
+      process.emit('SIGTERM'); const error = new Error('Browser cleanup failed while opening scene'); error.cleanupFailed = true; throw error;
+    };
+    await assert.rejects(render(source, output, '30'), /Render cleanup failed.*Browser cleanup failed/);
+    assert.equal(diagnostics.some(message => message.includes('cleanup completed')), false);
+  } finally { R.openScene = previous.openScene; R.encoder = previous.encoder; console.log = previous.log; console.error = previous.error; fs.rmSync(directory, { recursive: true }); }
+});
+
+test('real FFmpeg alpha accumulation retains straight color and coverage through ProRes', t => {
+  const { spawnSync } = require('node:child_process');
+  const { renderFilter, renderInputOptions } = require('../skills/broll-me/engine/render');
+  const ffmpeg = process.env.BROLL_FFMPEG || 'ffmpeg';
+  const available = spawnSync(ffmpeg, ['-version'], { timeout: 10000 });
+  if (available.error?.code === 'ENOENT') { t.skip('FFmpeg is unavailable; real alpha codec check was not run'); return; }
+  assert.equal(available.status, 0, available.stderr?.toString() || available.error?.message);
+  const fps = R.frameRate('30000/1001');
+  const transparent = [0, 0, 0, 0];
+  const cases = [
+    { frames: [[255, 255, 255, 255], transparent, transparent, transparent], expected: [255, 255, 255, 64] },
+    { frames: Array(4).fill([255, 17, 127, 0]), expected: [0, 0, 0, 0] },
+    { frames: [[255, 64, 32, 4], transparent, transparent, transparent], expected: [255, 64, 32, 1] },
+    { frames: [[255, 0, 0, 128], [0, 255, 0, 64], [0, 0, 255, 32], transparent], expected: [146, 73, 36, 56] },
+    { frames: Array(4).fill([250, 80, 40, 255]), expected: [250, 80, 40, 255] },
+  ];
+  const input = Buffer.concat(cases.flatMap(value => value.frames.map(pixel => Buffer.from(Array(4).fill(pixel).flat()))));
+  const filter = renderFilter(true, fps.text);
+  const source = ['-v', 'error', '-f', 'rawvideo', '-pixel_format', 'rgba', '-video_size', '2x2', '-framerate', fps.subframes, '-i', '-', '-vf', filter, '-r', fps.text];
+  const run = (args, data) => {
+    const result = spawnSync(ffmpeg, args, { input: data, timeout: 10000, maxBuffer: 1024 * 1024 });
+    assert.equal(result.status, 0, result.stderr?.toString() || result.error?.message);
+    return result.stdout;
+  };
+  const checkPixels = decoded => {
+    assert.equal(decoded.length, cases.length * 16, 'the exact rational FPS keeps one output frame per four input samples');
+    for (const [frame, value] of cases.entries()) {
+      for (let pixel = 0; pixel < 4; pixel++) {
+        const actual = decoded.subarray(frame * 16 + pixel * 4, frame * 16 + pixel * 4 + 4);
+        actual.forEach((channel, index) => assert.ok(Math.abs(channel - value.expected[index]) <= 2,
+          `frame ${frame}, channel ${index}: ${channel} differs from ${value.expected[index]}`));
+      }
+    }
+    const white = decoded.subarray(0, 4);
+    assert.ok(Math.abs(white[0] * white[3] / 255 - 64) <= 2, 'quarter coverage keeps its brightness on black');
+    assert.deepEqual([...decoded.subarray(16, 20)], [0, 0, 0, 0], 'zero alpha discards hidden RGB');
+  };
+  checkPixels(run([...source, '-pix_fmt', 'rgba', '-f', 'rawvideo', '-'], input));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'broll-alpha-test-'));
+  try {
+    const output = path.join(directory, 'coverage.mov');
+    run([...source, '-c:v', 'prores_ks', '-profile:v', '4', '-pix_fmt', 'yuva444p10le', '-vendor', 'apl0', output], input);
+    checkPixels(run(['-v', 'error', '-i', output, '-pix_fmt', 'rgba', '-f', 'rawvideo', '-']));
+    const png = (pixel, format) => run(['-v', 'error', '-f', 'rawvideo', '-pixel_format', 'rgba', '-video_size', '2x2', '-i', '-',
+      '-frames:v', '1', '-pix_fmt', format, '-c:v', 'png', '-f', 'image2pipe', '-'], Buffer.from(Array(4).fill(pixel).flat()));
+    const white = png([255, 255, 255, 255], 'rgb24'), clear = png(transparent, 'rgba');
+    assert.equal(white[25], 2); assert.equal(clear[25], 6);
+    const mixed = Buffer.concat([white, white, clear, clear, clear, white, clear, white, white, white, white, white]);
+    const mixedOutput = path.join(directory, 'mixed-png.mov');
+    run(['-v', 'error', '-f', 'image2pipe', '-framerate', fps.subframes, '-c:v', 'png', ...renderInputOptions(true), '-i', '-',
+      '-vf', filter, '-r', fps.text, '-c:v', 'prores_ks', '-profile:v', '4', '-pix_fmt', 'yuva444p10le', mixedOutput], mixed);
+    const decoded = run(['-v', 'error', '-i', mixedOutput, '-pix_fmt', 'rgba', '-f', 'rawvideo', '-']);
+    assert.equal(decoded.length, 3 * 16, 'RGB/RGBA PNG changes must not reset accumulation or frame selection');
+    for (const [frame, alpha] of [128, 128, 255].entries()) {
+      const pixel = decoded.subarray(frame * 16, frame * 16 + 4);
+      assert.ok(pixel.subarray(0, 3).every(channel => Math.abs(channel - 255) <= 2));
+      assert.ok(Math.abs(pixel[3] - alpha) <= 2);
+    }
+  } finally { fs.rmSync(directory, { recursive: true }); }
 });
 
 test('scene checker bounds key seeks and flags only visible tagged text', () => {

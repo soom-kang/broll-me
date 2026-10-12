@@ -6,6 +6,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
 
@@ -162,21 +163,62 @@ def load_plan(plan_path):
     return plan, source, source_info, clips
 
 
+def _check_output_symlinks(output):
+    """Reject output aliases while allowing macOS's standard temp-root aliases."""
+    for path in (output, *output.parents):
+        if not path.is_symlink():
+            continue
+        if path != output and sys.platform == "darwin" and path in {Path("/tmp"), Path("/var")}:
+            if path.resolve() == Path("/private") / path.name:
+                continue
+        raise MediaError(f"Output must not use a symlink: {path}; use a new output directory")
+
+
+def validate_output_path(output, *, inputs=()):
+    """Check a file destination and its parents without creating anything."""
+    output = Path(output).expanduser().absolute()
+    _check_output_symlinks(output)
+    if output.exists() and not output.is_file():
+        raise MediaError(f"Output must be a regular file: {output}; use a new output path")
+    for parent in output.parents:
+        if parent.exists() and not parent.is_dir():
+            raise MediaError(f"Output parent must be a directory: {parent}; use a new output directory")
+    resolved = output.resolve()
+    for path in inputs:
+        protected = Path(path).expanduser().resolve()
+        # Filesystem identity covers case/normalization aliases and hardlinks.
+        if resolved == protected or (output.exists() and protected.exists() and output.samefile(protected)):
+            raise MediaError(f"Output must not overwrite an input file: {output}")
+    return output
+
+
 @contextmanager
 def atomic_output(output, *, inputs=(), suffix=None):
-    output = Path(output).expanduser().resolve()
+    inputs = tuple(inputs)
+    output = validate_output_path(output, inputs=inputs)
     if suffix and output.suffix.lower() != suffix:
         raise MediaError(f"Output must end with {suffix}")
-    if output in {Path(path).resolve() for path in inputs}:
-        raise MediaError("Output must not overwrite an input file")
     output.parent.mkdir(parents=True, exist_ok=True)
-    handle, temporary = tempfile.mkstemp(prefix=".broll-", suffix=output.suffix, dir=output.parent)
-    os.close(handle)
-    temporary = Path(temporary)
+    validate_output_path(output, inputs=inputs)
+    directory = os.open(output.parent, os.O_RDONLY)
+    temporary = None
     try:
+        handle, name = tempfile.mkstemp(prefix=".broll-", suffix=output.suffix, dir=output.parent)
+        temporary = Path(name)
+        os.close(handle)
         yield temporary
+        validate_output_path(output, inputs=inputs)
         if not temporary.is_file() or not temporary.stat().st_size:
             raise MediaError("Renderer produced no output")
+        validate_output_path(output, inputs=inputs)
         os.replace(temporary, output)
     finally:
-        temporary.unlink(missing_ok=True)
+        try:
+            if temporary is not None:
+                try:
+                    # Anchor cleanup to the original directory if a parent was renamed.
+                    os.unlink(temporary.name, dir_fd=directory)
+                except FileNotFoundError:
+                    pass
+        finally:
+            os.close(directory)

@@ -110,9 +110,11 @@ Reuse approved wording, palette and slots. Confirm new creative decisions when t
 
 Open the draft and key frames. Check readable Korean text, contrast, cutaway timing and transitions. For a transparent panel, check the speaker's movement across the whole slot. Tell the agent which time or wording to change.
 
-Draft captures one image per frame without motion blur. Final captures four subframes with motion blur. Dimensions, FPS, frame count, container and alpha behavior stay the same. A draft is review media; request final rendering for delivery.
+Draft captures one image per frame without motion blur. Final captures four subframes with motion blur. Transparent final renders average premultiplied colors before restoring straight alpha, so fading coverage does not dim the visible color twice. Dimensions, FPS, frame count and output codecs stay the same. A draft is review media; request final rendering for delivery.
 
 `check` validates scene contracts, sampled browser errors, failed resource requests and template text overflow. Playback still matters. On clipped text, shorten it or split the scene before rebuilding. On a browser or encoder error, inspect the CLI JSON and stderr, fix the cause and retry only the affected step. Keep previous outputs.
+
+A timeout returns `124` and requests cleanup before forced termination. Render publishes the staged video after encoder and browser cleanup. Read the cleanup diagnostics and inspect any retained staging files before retrying; see [timeout recovery](troubleshooting.md#runtime-and-browser).
 
 ## 5. Receive final files
 
@@ -120,7 +122,15 @@ Final files go in `outputs/<task>/`. For an author/build-only request, deliver t
 
 For source-video work, also receive `preview.mp4`, `viewer.html`, `compare.html` and `TIMING.md`. Full-frame cards use MP4 and `kind:full`; panels keep `bg:null`, use ProRes 4444 MOV and `kind:panel`. Review pages need their referenced clip and input files to remain available. The preview supports insertion review; an editor approves the final master.
 
-Before final rendering, copy the complete scene bundle to `outputs/<task>/scenes/<scene>/`, including HTML, `palette.resolved.json`, shared `assets/broll-me-fonts/` and required local assets. Check references from the delivered location. Final scene and review files must not depend on `works/`; `compare.html` may reference the source in `inputs/`. Report unresolved custom resources before claiming delivery complete. Select `--font-mode embedded` at build or preview time to make an individual HTML file self-contained. Both modes retain font notices.
+Use `Space` on the review-page background to toggle playback. Background arrow keys select clips in the viewer and seek by two seconds in compare. Focused controls keep their own keys; the compare seek slider applies one two-second arrow step, and its `Space` does not toggle playback.
+
+A media failure displays the affected reference and Retry. Restore the local file or correct the reference, then reload; viewer clip navigation and compare layout selection remain available. If autoplay is blocked, use Play manually. Report media that still cannot load as unreviewed; see [review-page recovery](troubleshooting.md#review-pages).
+
+If an active compare video waits for data or reloads, both videos pause at the review time. Wait for both to be ready, then press Play to resume.
+
+Before final rendering, copy the complete scene bundle to `outputs/<task>/scenes/<scene>/`, including HTML, `palette.resolved.json`, shared `assets/broll-me-fonts/` and required local assets. Check references from the delivered location. Final scene and review files must not depend on `works/`; `compare.html` may reference the source in `inputs/`. Report unresolved custom resources before claiming delivery complete.
+
+Select `--font-mode embedded` at build or preview time to include the font data and full [Geist](../engine/fonts/OFL-Geist.txt) and [Noto Sans KR](../engine/fonts/OFL-NotoSansKR.txt) OFL notices inside each HTML file. Read the named CSS comments in the HTML source; they add no visible page content. Shared mode copies the three font files and both OFL notices to the adjacent asset directory. Both modes fail if a required source notice is missing or empty. Referenced media, custom assets and their notices must still accompany the HTML.
 
 The preview preserves source files and copies their audio streams. Video and audio must start at zero; audio must fit inside the video duration and be MP4-compatible. Unsupported timing or codecs cause failure. Supply an approved compatible input copy or arrange separate audio editing. The skill does not normalize, truncate or transcode original audio as an automatic fallback. If the slot is longer than its clip, the preview holds the last frame until the slot ends.
 

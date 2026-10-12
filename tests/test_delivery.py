@@ -1,10 +1,13 @@
 """Regression coverage for subtitle, insertion, and review-page contracts."""
 from fractions import Fraction
 import hashlib
+import html
 import json
+import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import sys
 import tempfile
 import unittest
@@ -20,10 +23,19 @@ import make_pages
 import media
 import preview_bundle
 import words
+import fonts
 
 
 def info(duration=10, alpha=False):
     return {"width": 320, "height": 180, "duration": duration, "fps": "30000/1001", "rate": Fraction(30000, 1001), "audio": [], "stream": {"pix_fmt": "yuva444p10le" if alpha else "yuv420p", "start_time": "0", "duration": str(duration)}}
+
+
+def case_alias(test, path):
+    alias = path.with_name(path.name.swapcase())
+    if not alias.exists() or not alias.samefile(path):
+        test.skipTest("Fixture filesystem does not expose a case-equivalent file alias")
+    test.assertNotEqual(alias.resolve(), path.resolve())
+    return alias
 
 
 class SubtitleTests(unittest.TestCase):
@@ -116,8 +128,238 @@ class PlanTests(unittest.TestCase):
             with media.atomic_output(output, inputs=[output]):
                 self.fail("Must not permit source overwrite")
 
+    def test_atomic_success_replaces_previous_output(self):
+        output = self.directory / "preview.mp4"
+        output.write_bytes(b"previous")
+        with media.atomic_output(output, suffix=".mp4") as temporary:
+            temporary.write_bytes(b"new preview")
+        self.assertEqual(output.read_bytes(), b"new preview")
+        self.assertEqual(list(self.directory.glob(".broll-*")), [])
+
+    def test_atomic_case_alias_refuses_before_first_write(self):
+        source = self.directory / "SOURCE.mp4"
+        source.write_bytes(b"protected source")
+        output = case_alias(self, source)
+        with patch.object(Path, "mkdir") as create_directory, \
+             patch.object(media.tempfile, "mkstemp") as create_temporary:
+            with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                with media.atomic_output(output, inputs=[source], suffix=".mp4"):
+                    self.fail("Must reject a filesystem-equivalent protected input")
+        create_directory.assert_not_called()
+        create_temporary.assert_not_called()
+        self.assertEqual(source.read_bytes(), b"protected source")
+
+    def test_atomic_distinct_hardlink_to_readable_input_symlink_is_rejected(self):
+        source = self.directory / "protected.mp4"
+        source.write_bytes(b"protected source")
+        readable = self.directory / "readable-input.mp4"
+        readable.symlink_to(source)
+        output = self.directory / "distinct-hardlink.mp4"
+        os.link(source, output)
+        self.assertNotEqual(source.resolve(), output.resolve())
+        with patch.object(media.tempfile, "mkstemp") as create_temporary:
+            with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                with media.atomic_output(output, inputs=[readable], suffix=".mp4"):
+                    self.fail("Output hardlinks to protected inputs are conservatively refused")
+        create_temporary.assert_not_called()
+        self.assertTrue(readable.is_symlink())
+        self.assertTrue(source.samefile(output))
+        self.assertEqual(source.read_bytes(), b"protected source")
+        self.assertEqual(output.read_bytes(), b"protected source")
+
+    def test_atomic_rechecks_input_identity_before_publication(self):
+        source = self.directory / "protected.mp4"
+        source.write_bytes(b"protected source")
+        output = self.directory / "new-output.mp4"
+        with self.assertRaisesRegex(media.MediaError, "overwrite"):
+            with media.atomic_output(output, inputs=[source], suffix=".mp4") as temporary:
+                temporary.write_bytes(b"new preview")
+                os.link(source, output)
+        self.assertTrue(source.samefile(output))
+        self.assertEqual(source.read_bytes(), b"protected source")
+        self.assertEqual(list(self.directory.glob(".broll-*")), [])
+
+    def test_case_sensitive_distinct_files_are_not_rejected_by_name(self):
+        source = self.directory / "PROTECTED.mp4"
+        source.write_bytes(b"protected source")
+        output = self.directory / "protected.mp4"
+        if output.exists():
+            self.skipTest("Fixture filesystem is case-insensitive; distinct case-only entries unavailable")
+        output.write_bytes(b"previous distinct output")
+        self.assertFalse(source.samefile(output))
+        with media.atomic_output(output, inputs=[source], suffix=".mp4") as temporary:
+            temporary.write_bytes(b"new preview")
+        self.assertEqual(source.read_bytes(), b"protected source")
+        self.assertEqual(output.read_bytes(), b"new preview")
+
+    def test_output_preflight_and_atomic_output_reject_nonregular_paths_without_writes(self):
+        missing = self.directory / "missing" / "output.mp4"
+        media.validate_output_path(missing)
+        self.assertFalse(missing.parent.exists())
+        regular = self.directory / "regular.mp4"
+        regular.write_bytes(b"previous regular output")
+        media.validate_output_path(regular)
+        self.assertEqual(regular.read_bytes(), b"previous regular output")
+        for kind in ["directory", "fifo", "parent-file"]:
+            with self.subTest(kind=kind):
+                blocked = self.directory / (kind + ".mp4")
+                if kind == "directory":
+                    blocked.mkdir()
+                    (blocked / "keep.bin").write_bytes(b"unrelated directory contents")
+                    output = blocked
+                elif kind == "fifo":
+                    os.mkfifo(blocked)
+                    output = blocked
+                else:
+                    blocked.write_bytes(b"unrelated parent file")
+                    output = blocked / "child.mp4"
+                with self.assertRaises(media.MediaError):
+                    media.validate_output_path(output)
+                with patch.object(media.tempfile, "mkstemp") as create_temporary:
+                    with self.assertRaises(media.MediaError):
+                        with media.atomic_output(output):
+                            self.fail("Must reject before creating a temporary output")
+                create_temporary.assert_not_called()
+                self.assertEqual(list(self.directory.glob(".broll-*")), [])
+                if kind == "directory":
+                    self.assertEqual((blocked / "keep.bin").read_bytes(), b"unrelated directory contents")
+                elif kind == "fifo":
+                    self.assertTrue(stat.S_ISFIFO(blocked.lstat().st_mode))
+                else:
+                    self.assertEqual(blocked.read_bytes(), b"unrelated parent file")
+
+    def test_atomic_rejects_existing_and_dangling_output_symlinks(self):
+        for present in [True, False]:
+            with self.subTest(target_present=present):
+                target = self.directory / f"target-{present}.mp4"
+                if present:
+                    target.write_bytes(b"target unchanged")
+                output = self.directory / f"alias-{present}.mp4"
+                output.symlink_to(target)
+                with self.assertRaisesRegex(media.MediaError, "symlink"):
+                    with media.atomic_output(output, suffix=".mp4"):
+                        self.fail("Must not render to an output symlink")
+                self.assertTrue(output.is_symlink())
+                self.assertEqual(output.readlink(), target)
+                if present:
+                    self.assertEqual(target.read_bytes(), b"target unchanged")
+                else:
+                    self.assertFalse(target.exists())
+        self.assertEqual(list(self.directory.glob(".broll-*")), [])
+
+    def test_atomic_rejects_output_parent_symlink(self):
+        target = self.directory / "target-directory"
+        target.mkdir()
+        (target / "preview.mp4").write_bytes(b"previous")
+        alias = self.directory / "output-directory"
+        alias.symlink_to(target, target_is_directory=True)
+        with self.assertRaisesRegex(media.MediaError, "symlink"):
+            with media.atomic_output(alias / "preview.mp4", suffix=".mp4"):
+                self.fail("Must not render through a directory symlink")
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual((target / "preview.mp4").read_bytes(), b"previous")
+        self.assertEqual(list(target.glob(".broll-*")), [])
+
+    def test_atomic_rejects_symlink_inserted_before_publication(self):
+        output = self.directory / "preview.mp4"
+        target = self.directory / "target.mp4"
+        target.write_bytes(b"target unchanged")
+        with self.assertRaisesRegex(media.MediaError, "symlink"):
+            with media.atomic_output(output, suffix=".mp4") as temporary:
+                temporary.write_bytes(b"new preview")
+                output.symlink_to(target)
+        self.assertTrue(output.is_symlink())
+        self.assertEqual(output.readlink(), target)
+        self.assertEqual(target.read_bytes(), b"target unchanged")
+        self.assertEqual(list(self.directory.glob(".broll-*")), [])
+
+    def test_atomic_late_parent_symlink_cleanup_preserves_target(self):
+        parent = self.directory / "output-directory"
+        parent.mkdir()
+        (parent / "preview.mp4").write_bytes(b"previous")
+        target = self.directory / "target-directory"
+        target.mkdir()
+        (target / "preview.mp4").write_bytes(b"target unchanged")
+        saved = self.directory / "saved-directory"
+        with self.assertRaisesRegex(media.MediaError, "symlink"):
+            with media.atomic_output(parent / "preview.mp4", suffix=".mp4") as temporary:
+                temporary.write_bytes(b"new preview")
+                (target / temporary.name).write_bytes(b"unrelated target file")
+                parent.rename(saved)
+                parent.symlink_to(target, target_is_directory=True)
+        self.assertTrue(parent.is_symlink())
+        self.assertEqual((saved / "preview.mp4").read_bytes(), b"previous")
+        self.assertEqual((target / "preview.mp4").read_bytes(), b"target unchanged")
+        self.assertEqual((target / temporary.name).read_bytes(), b"unrelated target file")
+        self.assertEqual(list(saved.glob(".broll-*")), [])
+
 
 class ReviewAndLayoutTests(unittest.TestCase):
+    def test_shared_font_validation_is_read_only_and_accepts_identical_assets(self):
+        with tempfile.TemporaryDirectory(prefix="broll-font-preflight-") as directory:
+            output = Path(directory) / "missing" / "export"
+            fonts.validate_shared_fonts(output)
+            self.assertFalse(output.parent.exists())
+            css = fonts.font_css(output, "shared")
+            files = {path: path.read_bytes() for path in output.rglob("*") if path.is_file()}
+            fonts.validate_shared_fonts(output)
+            self.assertEqual(fonts.font_css(output, "shared"), css)
+            self.assertEqual({path: path.read_bytes() for path in output.rglob("*") if path.is_file()}, files)
+
+    def test_font_modes_retain_complete_notices_and_shared_asset_bytes(self):
+        with tempfile.TemporaryDirectory(prefix="broll-font-notices-") as directory:
+            output = Path(directory) / "export"
+            css = fonts.font_css(output, "embedded")
+            self.assertFalse(output.exists())
+            self.assertEqual(css.count("data:font/"), 3)
+            comments = dict(re.findall(r"/\* Font notice: ([^\n]+)\n(.*?)\n\*/", css, re.S))
+            for filename in fonts.NOTICES:
+                self.assertEqual(html.unescape(comments[filename]), (fonts.FONTS / filename).read_text(encoding="utf-8"))
+            shared_css = fonts.font_css(output, "shared")
+            self.assertNotIn("data:font/", shared_css)
+            asset_dir = output / "assets" / "broll-me-fonts"
+            filenames = [filename for _, filename, _, _ in fonts.FONT_FILES] + list(fonts.NOTICES)
+            self.assertEqual(sorted(path.name for path in asset_dir.iterdir()), sorted(filenames))
+            for filename in filenames:
+                self.assertEqual((asset_dir / filename).read_bytes(), (fonts.FONTS / filename).read_bytes())
+            self.assertEqual(fonts.font_css(output, "shared"), shared_css)
+            (asset_dir / fonts.NOTICES[0]).write_text("unrelated notice", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "font asset differs"):
+                fonts.font_css(output, "shared")
+            self.assertEqual((asset_dir / fonts.NOTICES[0]).read_text(encoding="utf-8"), "unrelated notice")
+
+    def test_required_font_notices_fail_before_asset_creation_in_both_modes(self):
+        for mode in ["embedded", "shared"]:
+            for filename in fonts.NOTICES:
+                for failure in ["missing", "empty"]:
+                    with self.subTest(mode=mode, filename=filename, failure=failure), \
+                         tempfile.TemporaryDirectory(prefix="broll-font-notices-") as directory:
+                        source = Path(directory) / "fonts"
+                        shutil.copytree(fonts.FONTS, source)
+                        if failure == "missing":
+                            (source / filename).unlink()
+                        else:
+                            (source / filename).write_text(" \n\t", encoding="utf-8")
+                        output = Path(directory) / "export"
+                        with patch.object(fonts, "FONTS", source), \
+                             self.assertRaisesRegex(ValueError, f"font notice is {failure}"):
+                            fonts.font_css(output, mode)
+                        self.assertFalse(output.exists())
+
+    def test_embedded_notice_cannot_end_the_css_comment_or_style_element(self):
+        notice = "Copyright fixture & contributors &lt; *&#47;\n*/ </StYlE><script>bad()</script>\n<terms>"
+        with tempfile.TemporaryDirectory(prefix="broll-font-notices-") as directory:
+            source = Path(directory) / "fonts"
+            shutil.copytree(fonts.FONTS, source)
+            (source / fonts.NOTICES[0]).write_text(notice, encoding="utf-8")
+            with patch.object(fonts, "FONTS", source):
+                css = fonts.font_css(Path(directory) / "export", "embedded")
+        self.assertNotIn("<", css)
+        self.assertEqual(css.count("*/"), len(fonts.NOTICES))
+        comments = dict(re.findall(r"/\* Font notice: ([^\n]+)\n(.*?)\n\*/", css, re.S))
+        self.assertEqual(html.unescape(comments[fonts.NOTICES[0]]), notice)
+        self.assertEqual(css.count("@font-face"), 3)
+
     def test_inserted_metadata_is_not_template_input(self):
         data = {"title": "/*TITLE*/ /*CLIPS*/[]", "line": "Use /*FONT_CSS*/ here </script>"}
         source = "<title>/*TITLE*/</title><script>const clips=/*CLIPS*/[];</script>/*FONT_CSS*/"
@@ -191,12 +433,374 @@ class ProjectFolderDeliveryTests(unittest.TestCase):
     def fake_probe(self, path):
         return info(1 if Path(path) == self.clip else 10)
 
+    def tree_state(self):
+        """Record bytes and entry types without opening FIFOs or following aliases."""
+        state = {}
+        for path in self.directory.rglob("*"):
+            contents = str(path.readlink()) if path.is_symlink() else path.read_bytes() if path.is_file() else None
+            state[str(path.relative_to(self.directory))] = (stat.S_IFMT(path.lstat().st_mode), contents)
+        return state
+
     def test_plan_resolves_inputs_and_outputs_from_work_directory(self):
         with patch.object(media, "probe", side_effect=self.fake_probe):
             _, source, _, clips = media.load_plan(self.plan_path)
         self.assertEqual(source, self.source.resolve())
         self.assertEqual(clips[0]["path"], self.clip.resolve())
         self.assertEqual(self.source.read_bytes(), b"source fixture")
+
+    def test_selected_parent_symlink_is_rejected_by_media_entry_points(self):
+        alias = self.directory / "output-alias"
+        alias.symlink_to(self.output, target_is_directory=True)
+        actions = [
+            ("inspection", lambda: inspect_video.inspect_video(self.source, alias)),
+            ("review pages", lambda: make_pages.write_pages(self.plan_path, alias / self.preview.name)),
+            ("preview bundle", lambda: preview_bundle.create_bundle(self.plan_path, alias / self.preview.name)),
+        ]
+        with patch.dict(sys.modules, {"numpy": object()}), \
+             patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(inspect_video, "probe") as inspection_probe, \
+             patch.object(make_pages, "probe") as pages_probe, \
+             patch.object(preview_bundle, "create_preview") as render:
+            for name, action in actions:
+                with self.subTest(entry_point=name), self.assertRaisesRegex(media.MediaError, "symlink"):
+                    action()
+        inspection_probe.assert_not_called()
+        pages_probe.assert_not_called()
+        render.assert_not_called()
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertFalse((self.output / "viewer.html").exists())
+
+    def test_readable_preview_symlink_keeps_selected_output_directory(self):
+        selected = self.directory / "selected-review-directory"
+        selected.mkdir()
+        alias = selected / "preview-link.mp4"
+        alias.symlink_to(self.preview)
+        with patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(make_pages, "probe", side_effect=self.fake_probe):
+            pages = make_pages.write_pages(self.plan_path, alias)
+        self.assertEqual(pages, [selected / name for name in ["viewer.html", "compare.html", "TIMING.md"]])
+        viewer = pages[0].read_text(encoding="utf-8")
+        clips = json.loads(viewer.split("const CLIPS=", 1)[1].split(";", 1)[0])
+        self.assertEqual((selected / unquote(clips[0]["src"])).resolve(), self.preview)
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertFalse((self.output / "viewer.html").exists())
+
+    def test_review_output_case_aliases_protect_all_inputs_before_writes(self):
+        for role in ["source", "plan", "clip", "preview"]:
+            with self.subTest(protected_input=role):
+                output = self.output / ("case-" + role)
+                output.mkdir()
+                source, clip = self.source, self.clip
+                preview = output / "preview.mp4"
+                preview.write_bytes(b"previous preview")
+                plan_path = output / "plan.json"
+                protected = output / ("timing.MD" if role == "plan" else "01-PANEL_PREVIEW.MP4" if role == "clip" else "COMPARE.HTML")
+                protected.write_bytes(b"protected input")
+                alias = case_alias(self, protected)
+                if role == "source":
+                    source = protected
+                elif role == "clip":
+                    clip = protected
+                elif role == "preview":
+                    preview = protected
+                else:
+                    plan_path = protected
+                plan = json.loads(json.dumps(self.plan))
+                plan["video"] = str(source)
+                plan["clips"][0]["file"] = str(clip)
+                if role == "clip":
+                    panel = output / "panel.mov"
+                    panel.write_bytes(b"panel input")
+                    plan["clips"] = [
+                        {"id": "01", "title": "panel", "in": 2, "out": 3, "kind": "panel", "file": str(panel)},
+                        {**plan["clips"][0], "id": "02", "in": 4, "out": 5},
+                    ]
+                plan_path.write_text(json.dumps(plan), encoding="utf-8")
+                before = self.tree_state()
+                def fake_probe(path):
+                    return info(1 if Path(path) == clip or Path(path).suffix == ".mov" else 10, Path(path).suffix == ".mov")
+                with patch.object(media, "probe", side_effect=fake_probe), \
+                     patch.object(make_pages, "probe") as preview_probe, \
+                     patch.object(make_pages, "run") as panel_encoder, \
+                     patch.object(make_pages, "local_fonts") as copy_fonts, \
+                     patch.object(media.tempfile, "mkstemp") as create_temporary:
+                    with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                        make_pages.write_pages(plan_path, preview, font_mode="shared")
+                for operation in [preview_probe, panel_encoder, copy_fonts, create_temporary]:
+                    operation.assert_not_called()
+                self.assertTrue(alias.samefile(protected))
+                self.assertEqual(self.tree_state(), before)
+
+    def test_inspection_report_case_alias_refuses_before_contact_or_encoder(self):
+        source = self.output / "VIDEO.JSON"
+        source.write_bytes(b"protected source")
+        case_alias(self, source)
+        contact = self.output / "contact.png"
+        contact.write_bytes(b"previous contact")
+        before = self.tree_state()
+        with patch.dict(sys.modules, {"numpy": object()}), \
+             patch.object(inspect_video, "probe") as source_probe, \
+             patch.object(inspect_video, "run") as encoder, \
+             patch.object(media.tempfile, "mkstemp") as create_temporary:
+            with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                inspect_video.inspect_video(source, self.output)
+        for operation in [source_probe, encoder, create_temporary]:
+            operation.assert_not_called()
+        self.assertEqual(self.tree_state(), before)
+
+    def test_later_review_page_aliases_fail_before_any_output_or_font_changes(self):
+        for filename in ["compare.html", "TIMING.md"]:
+            for present in [True, False]:
+                with self.subTest(filename=filename, target_present=present):
+                    previous = {name: ("previous " + name).encode() for name in ["viewer.html", "compare.html", "TIMING.md"]}
+                    for name, content in previous.items():
+                        (self.output / name).write_bytes(content)
+                    target = self.directory / f"target-{filename}-{present}"
+                    if present:
+                        target.write_bytes(b"target unchanged")
+                    alias = self.output / filename
+                    alias.unlink()
+                    alias.symlink_to(target)
+                    with patch.object(media, "probe") as source_probe, \
+                         patch.object(make_pages, "run") as render, \
+                         patch.object(make_pages, "local_fonts") as copy_fonts:
+                        with self.assertRaisesRegex(media.MediaError, "symlink"):
+                            make_pages.write_pages(self.plan_path, self.preview, font_mode="shared")
+                    source_probe.assert_not_called()
+                    render.assert_not_called()
+                    copy_fonts.assert_not_called()
+                    for name, content in previous.items():
+                        if name != filename:
+                            self.assertEqual((self.output / name).read_bytes(), content)
+                    self.assertTrue(alias.is_symlink())
+                    self.assertEqual(alias.readlink(), target)
+                    if present:
+                        self.assertEqual(target.read_bytes(), b"target unchanged")
+                    else:
+                        self.assertFalse(target.exists())
+                    self.assertFalse((self.output / "assets").exists())
+                    self.assertEqual(list(self.output.glob(".broll-*")), [])
+                    alias.unlink()
+
+    def test_nonregular_page_and_inspection_outputs_fail_before_any_write(self):
+        for filename in ["compare.html", "TIMING.md", "video.json"]:
+            with self.subTest(filename=filename):
+                output = self.output / ("directory-" + filename)
+                output.mkdir()
+                preview = output / "preview.mp4"
+                preview.write_bytes(b"previous preview")
+                for name in ["viewer.html", "compare.html", "TIMING.md", "contact.png", "video.json"]:
+                    (output / name).write_bytes(("previous " + name).encode())
+                (output / filename).unlink()
+                (output / filename).mkdir()
+                (output / filename / "keep.txt").write_bytes(b"unrelated output-directory contents")
+                asset = output / "assets" / "keep.bin"
+                asset.parent.mkdir()
+                asset.write_bytes(b"previous asset")
+                before = self.tree_state()
+                with patch.dict(sys.modules, {"numpy": object()}), \
+                     patch.object(media, "probe") as source_probe, \
+                     patch.object(inspect_video, "probe") as inspection_probe, \
+                     patch.object(make_pages, "probe") as pages_probe, \
+                     patch.object(inspect_video, "run") as inspect_encoder, \
+                     patch.object(make_pages, "run") as panel_encoder, \
+                     patch.object(make_pages, "local_fonts") as copy_fonts:
+                    with self.assertRaises(media.MediaError):
+                        if filename == "video.json":
+                            inspect_video.inspect_video(self.source, output)
+                        else:
+                            make_pages.write_pages(self.plan_path, preview, font_mode="shared")
+                for operation in [source_probe, inspection_probe, pages_probe, inspect_encoder, panel_encoder, copy_fonts]:
+                    operation.assert_not_called()
+                self.assertEqual(self.tree_state(), before)
+
+    def test_later_nonregular_panel_preview_fails_before_other_outputs_change(self):
+        self.plan["clips"] = [
+            {"id": str(index), "title": "panel", "in": index * 2, "out": index * 2 + 1,
+             "kind": "panel", "file": f"../../outputs/folder-routing/panel-{index}.mov"}
+            for index in [1, 2]
+        ]
+        for index in [1, 2]:
+            (self.output / f"panel-{index}.mov").write_bytes(b"panel input")
+        self.write_plan()
+        def panel_probe(path):
+            return info(1 if Path(path).suffix == ".mov" else 10, Path(path).suffix == ".mov")
+        for kind in ["directory", "fifo"]:
+            with self.subTest(kind=kind):
+                output = self.output / ("panel-" + kind)
+                output.mkdir()
+                preview = output / "preview.mp4"
+                preview.write_bytes(b"previous preview")
+                for name in ["viewer.html", "compare.html", "TIMING.md", "01-panel-1_preview.mp4"]:
+                    (output / name).write_bytes(("previous " + name).encode())
+                asset = output / "assets" / "keep.bin"
+                asset.parent.mkdir()
+                asset.write_bytes(b"previous asset")
+                blocked = output / "02-panel-2_preview.mp4"
+                if kind == "directory":
+                    blocked.mkdir()
+                    (blocked / "keep.txt").write_bytes(b"unrelated directory contents")
+                else:
+                    os.mkfifo(blocked)
+                before = self.tree_state()
+                with patch.object(media, "probe", side_effect=panel_probe), \
+                     patch.object(make_pages, "probe", side_effect=panel_probe), \
+                     patch.object(make_pages, "run") as render, \
+                     patch.object(make_pages, "local_fonts") as copy_fonts:
+                    with self.assertRaises(media.MediaError):
+                        make_pages.write_pages(self.plan_path, preview, font_mode="shared")
+                render.assert_not_called()
+                copy_fonts.assert_not_called()
+                self.assertEqual(self.tree_state(), before)
+
+    def test_shared_font_conflicts_fail_before_panel_or_review_outputs_change(self):
+        panel = self.output / "panel.mov"
+        panel.write_bytes(b"panel input")
+        self.plan["clips"][0].update(kind="panel", file="../../outputs/folder-routing/panel.mov")
+        self.write_plan()
+        def panel_probe(path):
+            return info(1 if Path(path) == panel else 10, Path(path) == panel)
+        cases = ["assets-link", "assets-file", "font-directory-link", "font-directory-file",
+                 "font-link", "dangling-font-link", "different-notice", "font-directory", "font-fifo"]
+        for conflict in cases:
+            with self.subTest(conflict=conflict):
+                output = self.output / conflict
+                output.mkdir()
+                preview = output / "preview.mp4"
+                preview.write_bytes(b"previous preview")
+                for name in ["viewer.html", "compare.html", "TIMING.md", "01-panel_preview.mp4"]:
+                    (output / name).write_bytes(("previous " + name).encode())
+                asset_dir = output / "assets" / "broll-me-fonts"
+                target = self.directory / (conflict + "-target")
+                if conflict in {"assets-link", "font-directory-link"}:
+                    target.mkdir()
+                    (target / "keep.bin").write_bytes(b"alias target unchanged")
+                    alias = asset_dir.parent if conflict == "assets-link" else asset_dir
+                    alias.parent.mkdir(parents=True, exist_ok=True)
+                    alias.symlink_to(target, target_is_directory=True)
+                elif conflict in {"assets-file", "font-directory-file"}:
+                    blocked = asset_dir.parent if conflict == "assets-file" else asset_dir
+                    blocked.parent.mkdir(parents=True, exist_ok=True)
+                    blocked.write_bytes(b"unrelated directory-name file")
+                else:
+                    asset_dir.mkdir(parents=True)
+                    (asset_dir.parent / "keep.bin").write_bytes(b"previous asset")
+                    blocked = asset_dir / fonts.NOTICES[-1]
+                    if conflict in {"font-link", "dangling-font-link"}:
+                        if conflict == "font-link":
+                            target.write_bytes(b"alias target unchanged")
+                        blocked.symlink_to(target)
+                    elif conflict == "different-notice":
+                        blocked.write_bytes(b"unrelated notice")
+                    elif conflict == "font-directory":
+                        blocked.mkdir()
+                        (blocked / "keep.bin").write_bytes(b"unrelated font-name directory")
+                    else:
+                        os.mkfifo(blocked)
+                before = self.tree_state()
+                with patch.object(media, "probe", side_effect=panel_probe), \
+                     patch.object(make_pages, "probe", side_effect=panel_probe), \
+                     patch.object(make_pages, "run") as render, \
+                     patch.object(make_pages, "local_fonts") as copy_fonts:
+                    with self.assertRaises(ValueError):
+                        make_pages.write_pages(self.plan_path, preview, font_mode="shared")
+                render.assert_not_called()
+                copy_fonts.assert_not_called()
+                self.assertEqual(self.tree_state(), before)
+
+    def test_embedded_review_pages_ignore_unrelated_shared_font_conflicts(self):
+        assets = self.output / "assets"
+        assets.write_bytes(b"unrelated assets file")
+        with patch.object(media, "probe", side_effect=self.fake_probe), \
+             patch.object(make_pages, "probe", side_effect=self.fake_probe):
+            pages = make_pages.write_pages(self.plan_path, self.preview, font_mode="embedded")
+        self.assertTrue(all(page.is_file() for page in pages))
+        self.assertIn("data:font/", pages[0].read_text())
+        self.assertEqual(assets.read_bytes(), b"unrelated assets file")
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+
+    def test_later_panel_preview_alias_fails_before_first_panel_or_font_changes(self):
+        self.plan["clips"] = [
+            {"id": str(index), "title": "panel", "in": index * 2, "out": index * 2 + 1,
+             "kind": "panel", "file": f"../../outputs/folder-routing/panel-{index}.mov"}
+            for index in [1, 2]
+        ]
+        for index in [1, 2]:
+            (self.output / f"panel-{index}.mov").write_bytes(b"panel fixture")
+        self.write_plan()
+        previous = {name: ("previous " + name).encode() for name in ["viewer.html", "compare.html", "TIMING.md", "01-panel-1_preview.mp4"]}
+        for name, content in previous.items():
+            (self.output / name).write_bytes(content)
+        font_asset = self.output / "assets" / "approved-font.bin"
+        font_asset.parent.mkdir()
+        font_asset.write_bytes(b"previous font asset")
+        target = self.directory / "panel-target.mp4"
+        target.write_bytes(b"target unchanged")
+        alias = self.output / "02-panel-2_preview.mp4"
+        alias.symlink_to(target)
+        def panel_probe(path):
+            return info(1 if Path(path).suffix == ".mov" else 10, Path(path).suffix == ".mov")
+        with patch.object(media, "probe", side_effect=panel_probe), \
+             patch.object(make_pages, "run") as render, \
+             patch.object(make_pages, "local_fonts") as copy_fonts:
+            with self.assertRaisesRegex(media.MediaError, "symlink"):
+                make_pages.write_pages(self.plan_path, self.preview, font_mode="shared")
+        render.assert_not_called()
+        copy_fonts.assert_not_called()
+        for name, content in previous.items():
+            self.assertEqual((self.output / name).read_bytes(), content)
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual(alias.readlink(), target)
+        self.assertEqual(target.read_bytes(), b"target unchanged")
+        self.assertEqual(font_asset.read_bytes(), b"previous font asset")
+        self.assertEqual(list(font_asset.parent.iterdir()), [font_asset])
+        self.assertEqual(list(self.output.glob(".broll-*")), [])
+
+    def test_inspection_report_alias_fails_before_contact_or_encoder_changes(self):
+        contact = self.output / "contact.png"
+        contact.write_bytes(b"previous contact")
+        target = self.directory / "report-target.json"
+        target.write_bytes(b"target unchanged")
+        alias = self.output / "video.json"
+        alias.symlink_to(target)
+        with patch.dict(sys.modules, {"numpy": object()}), \
+             patch.object(inspect_video, "probe") as source_probe, \
+             patch.object(inspect_video, "run") as render:
+            with self.assertRaisesRegex(media.MediaError, "symlink"):
+                inspect_video.inspect_video(self.source, self.output)
+        source_probe.assert_not_called()
+        render.assert_not_called()
+        self.assertEqual(contact.read_bytes(), b"previous contact")
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual(alias.readlink(), target)
+        self.assertEqual(target.read_bytes(), b"target unchanged")
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertEqual(list(self.output.glob(".broll-*")), [])
+
+    def test_regular_panel_preview_and_review_pages_are_published(self):
+        panel = self.output / "panel.mov"
+        panel.write_bytes(b"panel fixture")
+        self.plan["clips"][0].update(kind="panel", file="../../outputs/folder-routing/panel.mov")
+        self.write_plan()
+        def panel_probe(path):
+            return info(1 if Path(path) == panel else 10, Path(path) == panel)
+        def render_panel(command):
+            Path(command[-1]).write_bytes(b"panel preview fixture")
+        with patch.object(media, "probe", side_effect=panel_probe), \
+             patch.object(make_pages, "probe", side_effect=panel_probe), \
+             patch.object(make_pages, "run", side_effect=render_panel) as render:
+            pages = make_pages.write_pages(self.plan_path, self.preview, font_mode="shared")
+        render.assert_called_once()
+        self.assertTrue(all(page.is_file() for page in pages))
+        self.assertEqual((self.output / "01-panel_preview.mp4").read_bytes(), b"panel preview fixture")
+        self.assertIn('"src": "01-panel_preview.mp4"', pages[0].read_text())
+        self.assertTrue((self.output / "assets" / "broll-me-fonts" / fonts.NOTICES[0]).is_file())
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertEqual(panel.read_bytes(), b"panel fixture")
 
     def test_review_pages_and_shared_fonts_survive_work_directory_removal(self):
         with patch.object(media, "probe", side_effect=self.fake_probe), patch.object(make_pages, "probe", side_effect=self.fake_probe):
@@ -237,6 +841,65 @@ class ProjectFolderDeliveryTests(unittest.TestCase):
         self.assertEqual(self.preview.read_bytes(), b"previous preview")
         self.assertEqual(viewer.read_bytes(), b"previous viewer")
         self.assertEqual(list(self.output.parent.glob(".broll-preview-*")), [])
+
+    def test_bundle_preview_case_aliases_refuse_before_directory_or_stage_writes(self):
+        plan_path = self.work / "protected-plan.mp4"
+        plan_path.write_text(json.dumps(self.plan), encoding="utf-8")
+        for protected in [self.source, self.clip, plan_path]:
+            with self.subTest(protected_input=protected.name):
+                output = case_alias(self, protected)
+                before = self.tree_state()
+                with patch.object(media, "probe", side_effect=self.fake_probe), \
+                     patch.object(Path, "mkdir") as create_directory, \
+                     patch.object(preview_bundle.tempfile, "mkdtemp") as create_stage, \
+                     patch.object(preview_bundle, "create_preview") as encoder, \
+                     patch.object(preview_bundle, "write_pages") as pages:
+                    with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                        preview_bundle.create_bundle(plan_path, output)
+                for operation in [create_directory, create_stage, encoder, pages]:
+                    operation.assert_not_called()
+                self.assertEqual(self.tree_state(), before)
+
+    def test_bundle_publication_case_alias_refuses_entire_set_before_backup(self):
+        protected = self.output / "SOURCE.mp4"
+        protected.write_bytes(b"protected source")
+        alias = case_alias(self, protected)
+        stage = self.directory / "staged-case-alias"
+        stage.mkdir()
+        (stage / "000-first.txt").write_bytes(b"new first output")
+        (stage / alias.name).write_bytes(b"new preview fixture")
+        prior = self.output / "000-first.txt"
+        prior.write_bytes(b"previous first output")
+        before = self.tree_state()
+        with patch.object(Path, "mkdir") as create_directory, \
+             patch.object(preview_bundle.os, "replace") as replace:
+            with self.assertRaisesRegex(media.MediaError, "overwrite"):
+                preview_bundle.publish_bundle(stage, self.output, protected=[protected])
+        create_directory.assert_not_called()
+        replace.assert_not_called()
+        self.assertFalse((stage / ".previous").exists())
+        self.assertEqual(self.tree_state(), before)
+
+    def test_bundle_late_protected_identity_rolls_back_prior_publication(self):
+        stage = self.directory / "staged-late-identity"
+        stage.mkdir()
+        (stage / "preview.mp4").write_bytes(b"new preview fixture")
+        (stage / "source.mp4").write_bytes(b"must not replace protected input")
+        late_output = self.output / "source.mp4"
+        replace = preview_bundle.os.replace
+        def insert_alias_after_first_publication(source, destination):
+            result = replace(source, destination)
+            if Path(source) == stage / "preview.mp4":
+                os.link(self.source, late_output)
+            return result
+        with patch.object(preview_bundle.os, "replace", side_effect=insert_alias_after_first_publication):
+            with self.assertRaisesRegex(media.MediaError, "prior files restored"):
+                preview_bundle.publish_bundle(stage, self.output, protected=[self.source])
+        self.assertEqual(self.preview.read_bytes(), b"previous preview")
+        self.assertEqual(self.source.read_bytes(), b"source fixture")
+        self.assertTrue(late_output.samefile(self.source))
+        self.assertEqual((stage / "source.mp4").read_bytes(), b"must not replace protected input")
+        self.assertFalse((stage / ".previous" / "source.mp4").exists())
 
     def test_bundle_success_keeps_final_relative_links(self):
         def fake_composite(plan, output):

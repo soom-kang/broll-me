@@ -45,7 +45,11 @@ Keep one continuous shape where the message supports it, and align cursor action
 
 Correct invalid input rather than guessing missing values. Preserve outputs on failure. Use a focused retry only when the cause has changed; repeated failures need the command, actual error and required next input. Do not switch to cloud rendering, model APIs or external uploads as an automatic fallback.
 
+On timeout (`124`), read the cleanup diagnostics before retrying. Render closes the encoder and browser before publishing its staged video. Forced termination can leave processes or `.broll-render-*` files; preserve and inspect any reported staging directory. Follow [timeout recovery](reference/troubleshooting.md#runtime-and-browser) and do not report forced or unconfirmed cleanup as complete.
+
 If preview publication is interrupted or rollback fails, preserve the reported `.broll-preview-*` directory and its `.previous` backups. Inspect the outputs and retained files, complete any needed recovery, and report the block before retrying. Do not delete the recovery directory or rerun preview before that review.
+
+Build and palette publication use `.broll-palette.lock`; an occupied lock stops the write. On a reported rollback or cleanup failure, preserve any retained `.broll-build-*`, `.broll-palette-*` and lock, inspect the actual HTML and palette state, and complete recovery before retrying. Do not automatically reclaim a lock from an active or interrupted writer. Python media and review publication reject user-created output symlinks; readable input symlinks remain allowed. Follow the [publication recovery instructions](reference/troubleshooting.md#media-and-delivery).
 
 Finish when the requested outputs pass their applicable checks, with palette snapshots and required review files delivered. Author/build-only work ends after specification, path and bundle checks; report browser and playback checks as not run. Rendered delivery also requires playback checks. Distinguish local verification, actual host execution and human approval. Without footage, do not claim source synchronization or audio preservation. The preview supports insertion review; the editor still confirms speech timing, transitions and audio mix.
 

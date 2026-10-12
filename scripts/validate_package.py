@@ -21,29 +21,97 @@ IGNORE_FILES = {".DS_Store"}
 REQUIRED = {"SKILL.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "engine/build.py", "engine/motion.js", "reference/engine-api.md", "scripts/setup.sh", "agents/openai.yaml"}
 SECRET_CONTENT = re.compile(r"(?:-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----|\b(?:sk-(?:proj-|ant-)?[A-Za-z0-9_-]{24,}|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[A-Z0-9]{16})\b)")
 COMMON_FIELDS = {"name", "description", "license", "metadata"}
+IMPLICIT_WORDS = {"null", "~", "true", "false", "yes", "no", "on", "off", "y", "n"}
+JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
+YAML_NUMBER = re.compile(r"[-+]?(?:0[bBoOxX][0-9a-fA-F_]+|(?:[0-9][0-9_]*(?:\.[0-9_]*)?|\.[0-9_]+)(?:[eE][-+]?[0-9_]+)?|(?:[0-9][0-9_]*:)+[0-9_]+(?:\.[0-9_]*)?|\.(?:inf|nan))", re.I)
+YAML_DATE = re.compile(r"[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}(?:[Tt ].*)?")
+
+
+def portable_scalar(raw: str, *, string_only: bool, context: str) -> str:
+    """Validate one single-line scalar; this deliberately does not parse full YAML."""
+    value = raw.strip(" ")
+    if value.startswith('"'):
+        try:
+            value, end = json.JSONDecoder().raw_decode(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid double-quoted portable scalar: {context}") from exc
+        tail = raw.strip(" ")[end:]
+        if tail and not re.fullmatch(r" +#.*", tail):
+            raise ValueError(f"Trailing content after portable scalar: {context}")
+    elif value.startswith("'"):
+        quoted: list[str] = []
+        index = 1
+        while index < len(value):
+            if value[index] != "'":
+                quoted.append(value[index])
+                index += 1
+            elif index + 1 < len(value) and value[index + 1] == "'":
+                quoted.append("'")
+                index += 2
+            else:
+                tail = value[index + 1:]
+                if tail and not re.fullmatch(r" +#.*", tail):
+                    raise ValueError(f"Trailing content after portable scalar: {context}")
+                value = "".join(quoted)
+                break
+        else:
+            raise ValueError(f"Unterminated single-quoted portable scalar: {context}")
+    else:
+        value = re.split(r"(?:^| +)#", value, maxsplit=1)[0].rstrip(" ")
+        if value and (value[0] in "[]{},&*!|>'\"%@`" or re.match(r"[-?:](?: |$)", value)
+                      or re.search(r":(?: |$)", value)):
+            raise ValueError(f"Unsupported portable scalar syntax: {context}")
+        implicit = not value or value.lower() in IMPLICIT_WORDS or YAML_NUMBER.fullmatch(value) or YAML_DATE.fullmatch(value)
+        if implicit:
+            if string_only:
+                raise ValueError(f"Portable field must be a string: {context}; quote scalar-looking text")
+            if value and value.lower() not in IMPLICIT_WORDS and not JSON_NUMBER.fullmatch(value):
+                raise ValueError(f"Unsupported portable number/date syntax: {context}; quote it as a string")
+    if any(ord(char) < 32 or 127 <= ord(char) <= 159 or 0xD800 <= ord(char) <= 0xDFFF
+           or char in "\u2028\u2029\ufeff\ufffe\uffff" for char in value):
+        raise ValueError(f"Control characters are not supported in portable scalars: {context}")
+    return value
 
 
 def validate_frontmatter(text: str) -> None:
     match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", text, re.S)
     if not match:
         raise ValueError("SKILL.md must start with YAML frontmatter")
+    body = match.group(1)
+    if any((ord(char) < 32 and char != "\n") or 127 <= ord(char) <= 159
+           or 0xD800 <= ord(char) <= 0xDFFF or char in "\u2028\u2029\ufeff\ufffe\uffff" for char in body):
+        raise ValueError("Control characters and tabs are not supported in portable frontmatter")
     data: dict[str, str] = {}
-    for line in match.group(1).splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
+    metadata_keys: set[str] = set()
+    metadata_block = False
+    for line in body.split("\n"):
+        if not line.strip(" ") or line.lstrip(" ").startswith("#"):
             continue
         if line.startswith(" "):
-            if "metadata" not in data:
-                raise ValueError("Only a metadata map may be nested in portable frontmatter")
+            if not metadata_block:
+                raise ValueError("Only the active metadata map may be nested in portable frontmatter")
+            child = re.fullmatch(r"  ([A-Za-z_][A-Za-z0-9_-]*):(?: +(.*))?", line)
+            if not child or child[1] in metadata_keys or child[1].lower() in IMPLICIT_WORDS:
+                raise ValueError(f"Unsupported or duplicate portable metadata key: {line}")
+            portable_scalar(child[2] or "", string_only=False, context=f"metadata.{child[1]}")
+            metadata_keys.add(child[1])
             continue
-        field = re.fullmatch(r"([a-z-]+):\s*(.*)", line)
+        if metadata_block and not metadata_keys:
+            raise ValueError("Portable metadata must be a map; use {} for an empty map")
+        metadata_block = False
+        field = re.fullmatch(r"([a-z-]+):(?: +(.*))?", line)
         if not field or field[1] not in COMMON_FIELDS or field[1] in data:
             raise ValueError(f"Unsupported or duplicate portable frontmatter field: {line}")
-        value = field[2].strip()
-        if value.startswith('"'):
-            value = json.loads(value)
-        elif value.startswith("'") and value.endswith("'"):
-            value = value[1:-1].replace("''", "'")
-        data[field[1]] = value
+        if field[1] == "metadata":
+            value = re.split(r"(?:^| +)#", (field[2] or "").strip(" "), maxsplit=1)[0].rstrip(" ")
+            if value not in {"", "{}"}:
+                raise ValueError("Portable metadata must be {} or a flat map with two-space indentation")
+            metadata_block = not value
+            data[field[1]] = value
+        else:
+            data[field[1]] = portable_scalar(field[2] or "", string_only=True, context=field[1])
+    if metadata_block and not metadata_keys:
+        raise ValueError("Portable metadata must be a map; use {} for an empty map")
     if data.get("name") != "broll-me":
         raise ValueError("Skill name must be broll-me")
     description = data.get("description", "")
