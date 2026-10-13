@@ -16,14 +16,14 @@
 
 ## 1. Skill 하나 설치하기
 
-작업할 프로젝트에서 `v0.8.0-beta.2` 릴리즈를 설치하세요.
+작업할 프로젝트에서 `v0.8.0-beta.3` 릴리즈를 설치하세요.
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.3 --skill broll-me --agent codex claude-code
 npx skills list --agent codex claude-code
 ```
 
-이 명령은 베타 태그를 선택합니다. 배포물과 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
+이 명령은 베타 태그를 선택합니다. 배포물과 검증 범위는 [릴리즈 노트와 다운로드](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.3)에서 확인하세요. 로컬 checkout이나 릴리즈 ZIP을 푼 폴더로 설치하려면 절대 경로를 사용하세요.
 
 ```bash
 npx skills add /path/to/broll-me --skill broll-me --agent codex claude-code

@@ -16,14 +16,14 @@ Edit the [diagram HTML](assets/workflow-en.html).
 
 ## 1. Install one skill
 
-Install the `v0.8.0-beta.2` release from your working project:
+Install the `v0.8.0-beta.3` release from your working project:
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.3 --skill broll-me --agent codex claude-code
 npx skills list --agent codex claude-code
 ```
 
-This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2) for archives and verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
+This command selects the beta tag. See the [release notes and downloads](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.3) for archives and verification scope. To install from a local checkout or an extracted release ZIP, use its absolute path:
 
 ```bash
 npx skills add /path/to/broll-me --skill broll-me --agent codex claude-code

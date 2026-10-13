@@ -32,10 +32,10 @@ Open the [comparison page](docs/assets/onnimm-context.html) locally with its MP4
 Run this in the project where you will use the skill. Node.js and npm are needed for `npx`.
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.3 --skill broll-me --agent codex claude-code
 ```
 
-This installs the **`v0.8.0-beta.2` beta**. See the [release notes](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2) for its verification scope. Rendering also needs the [pinned local runtime](skills/broll-me/reference/workflow.md#2-provide-inputs-and-choose-a-palette); installing the skill alone does not prepare it.
+This installs the **`v0.8.0-beta.3` beta**. See the [release notes](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.3) for its verification scope. Rendering also needs the [pinned local runtime](skills/broll-me/reference/workflow.md#2-provide-inputs-and-choose-a-palette); installing the skill alone does not prepare it.
 
 ### 2. Ask for a clip
 

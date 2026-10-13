@@ -32,10 +32,10 @@ broll-me는 이 과정을 하나의 프롬프트 흐름으로 연결합니다. �
 스킬을 사용할 프로젝트에서 실행하세요. `npx`를 사용하려면 Node.js와 npm이 필요합니다.
 
 ```bash
-npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.2 --skill broll-me --agent codex claude-code
+npx skills add https://github.com/soom-kang/broll-me/tree/v0.8.0-beta.3 --skill broll-me --agent codex claude-code
 ```
 
-**`v0.8.0-beta.2` 베타 버전**을 설치합니다. 검증 범위는 [릴리즈 노트](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2)를 확인하세요. 렌더링에는 [고정 버전의 로컬 실행 환경](skills/broll-me/reference/workflow.ko.md#2-입력과-팔레트-지정하기)도 필요하며, 스킬 설치만으로 준비되지는 않습니다.
+**`v0.8.0-beta.3` 베타 버전**을 설치합니다. 검증 범위는 [릴리즈 노트](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.3)를 확인하세요. 렌더링에는 [고정 버전의 로컬 실행 환경](skills/broll-me/reference/workflow.ko.md#2-입력과-팔레트-지정하기)도 필요하며, 스킬 설치만으로 준비되지는 않습니다.
 
 ### 2. 클립 요청
 

@@ -33,7 +33,7 @@ Keep the English and Korean versions aligned when editing paired documents. Pres
 
 ## Packaging and licenses
 
-The portable skill lives in `skills/broll-me/`. Demo footage, local runtimes, evaluation records and private artwork stay outside the skill archives. Public release files are available from [GitHub Releases](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.2).
+The portable skill lives in `skills/broll-me/`. Demo footage, local runtimes, evaluation records and private artwork stay outside the skill archives. Public release files are available from [GitHub Releases](https://github.com/soom-kang/broll-me/releases/tag/v0.8.0-beta.3).
 
 Keep `SKILL.md` frontmatter within the portable subset checked by `scripts/validate_package.py`: top-level `name`, `description` and optional `license` are single-line strings; optional `metadata` is `{}` or a flat map with two-space indentation and simple scalar values. Use `name: broll-me` and a description of 1–1024 characters without angle brackets. Quote text containing `: ` or ` #`, or text that looks like a boolean, number or null. Lists, nested maps, multiline values, tags and anchors are unsupported. Both package backends run this check before creating archives; installing PyYAML does not widen the accepted format.
 
